@@ -176,15 +176,23 @@ If it saved you time, a star is appreciated.
 
 ---
 
-## Support
+## ☕ Support
 
-Pix donations welcome. Replace the placeholder with your key:
+If this toolkit saved you time, consider buying me a coffee.
 
-```
-Pix key: [your-pix-key-here]
-```
+<div align="center">
 
-Generate one in your bank app (random key, email or phone) and paste it above.
+### Pix
+
+**`vpnkkpo@gmail.com`**
+
+*Copy the key above and paste it in your bank app.*
+
+[![GitHub Sponsors](https://img.shields.io/badge/GitHub-Sponsors-ea4aaa?logo=githubsponsors&logoColor=white)](https://github.com/sponsors/vpnkkpo-lgtm)
+
+</div>
+
+Every bit helps keep the forge running. Thanks! 🙏
 
 ---
 
