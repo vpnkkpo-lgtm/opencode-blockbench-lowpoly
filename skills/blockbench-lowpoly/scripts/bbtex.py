@@ -257,12 +257,12 @@ def shade(color, factor):
     if factor >= 1:
         v = min(1.0, v * factor)
         s = max(0.0, s * (1.0 - 0.25 * (factor - 1)))
-        # slightly warm light
+        # a slightly warmer light tone
         h = (h + 0.015) % 1.0
     else:
         v = v * factor
         s = min(1.0, s * 1.08)
-        # slightly cool shadow (purple/blue)
+        # a slightly cooler shadow tone (purple/blue)
         h = (h + 0.965) % 1.0
     r2, g2, b2 = colorsys.hsv_to_rgb(h, s, v)
     return (round(r2 * 255), round(g2 * 255), round(b2 * 255), a)
@@ -410,7 +410,7 @@ class Canvas:
                 self.set(xx, yy, c)
 
     def dither(self, region, c1, c2, density=0.5, seed=1):
-        """Deterministic 2-color dither (no chaotic noise — clean style)."""
+        """Deterministic 2-color dither, ordered so the result stays clean at pixel-art scale."""
         x, y, w, h = self.region_bbox(region)
         s = seed & 0x7FFFFFFF
         for yy in range(y, y + h):

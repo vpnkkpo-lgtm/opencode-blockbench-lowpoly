@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""card_v7.py — multi-theme store card.
+"""bbcard.py — multi-theme store card.
 
-Same layout as v6 (side hero + checklist + info panel + CTA), but with
-different VIBE THEMES for each model type.
+Layout: side hero + checklist + info panel + CTA. Each model type has its own
+visual theme.
 
 Themes:
   casual       candy pink/purple, cute (default)
@@ -13,9 +13,9 @@ Themes:
   royal        purple/gold, luxury, elegant
 
 CLI:
-  python card_v7.py --theme horror --name "Zombie" --desc "..." \
+  python bbcard.py --theme horror --name "Zombie" --desc "..." \
       --preview prev.png --out card.png --info "Key: value" \
-      [--price "R$ 19,90" --old-price "R$ 39,90"] [--badge "NEW"]
+      [--price "$19.90" --old-price "$39.90"] [--badge "NEW"]
 """
 import argparse
 import math
@@ -463,7 +463,7 @@ def seal(img, cx, cy, lines, t, max_text_w=104):
 
 
 # ---------------------------------------------------------------- bbmodel
-def stats_from_bbmodel(path, estilo="Cute Lowpoly"):
+def stats_from_bbmodel(path, style="Cute Lowpoly"):
     """Reads a .bbmodel and returns (name, [info strings]) ready for the card.
 
     Infos: Height (Y bounds / 16 = meters), Polygons, Texture, Style.
@@ -498,30 +498,30 @@ def stats_from_bbmodel(path, estilo="Cute Lowpoly"):
         res = d.get("resolution", {})
         tw, th = res.get("width", 0), res.get("height", 0)
     infos.append("Texture: %dx%d" % (tw, th) if tw and th else "Texture: --")
-    infos.append("Style: %s" % estilo)
+    infos.append("Style: %s" % style)
     return name, infos
 
 
 # ---------------------------------------------------------------- main
 def main():
-    ap = argparse.ArgumentParser(description="Multi-theme store card v7 (PIL)")
+    ap = argparse.ArgumentParser(description="Multi-theme store card")
     ap.add_argument("--theme", default="casual", choices=sorted(THEMES.keys()),
-                    help="card theme/vibe")
+                    help="card theme")
     ap.add_argument("--name", default="MODEL NAME")
     ap.add_argument("--desc", default="Model description.")
     ap.add_argument("--preview", default=None)
-    ap.add_argument("--out", default="/sdcard/TesteBbmodel/card_v7.png")
+    ap.add_argument("--out", default="card.png")
     ap.add_argument("--info", action="append", default=[])
     ap.add_argument("--model", default=None,
                     help="path to a .bbmodel — fills name and stats automatically")
-    ap.add_argument("--estilo", default="Cute Lowpoly",
+    ap.add_argument("--style", default="Cute Lowpoly",
                     help="text of the Style field when using --model")
     ap.add_argument("--badge", default=None,
                     help="badge text (default comes from the theme)")
     ap.add_argument("--cta", default=None,
                     help="free button text (default comes from the theme)")
     ap.add_argument("--price", default=None,
-                    help="price (e.g. 'R$ 19,90'). Empty = free")
+                    help="price (e.g. '$19.90'). Empty = free")
     ap.add_argument("--old-price", default=None, dest="old_price",
                     help="crossed-out old price")
     args = ap.parse_args()
@@ -531,9 +531,9 @@ def main():
     desc = ascii_text(args.desc)
     infos = [ascii_text(i) for i in args.info]
 
-    # --model: pull name + stats straight from the .bbmodel (explicit info takes priority)
+    # explicit --info entries take priority over the ones read from the .bbmodel
     if args.model and os.path.exists(args.model):
-        mname, minfos = stats_from_bbmodel(args.model, estilo=ascii_text(args.estilo))
+        mname, minfos = stats_from_bbmodel(args.model, style=ascii_text(args.style))
         if args.name == "MODEL NAME":
             name = ascii_text(mname).upper()
         infos = [ascii_text(i) for i in minfos] + infos

@@ -172,7 +172,7 @@ opencode-blockbench-lowpoly/
 │   ├── scripts/   (bbmodel, bbtex, bbcheck, bbglb, bburl, bbrender, bbkit, bbcard)
 │   ├── references/ (spec, pitfalls, style, workflow)
 │   ├── templates/  (4 palettes)
-│   └── examples/  (mascote_cogumelo, espada)
+│   └── examples/  (mushroom_mascot, sword)
 ├── package.json
 ├── LICENSE
 └── README.md

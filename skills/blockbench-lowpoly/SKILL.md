@@ -5,7 +5,7 @@ description: Pure-Python toolkit (no MCP, no dependencies) to author low-poly 3D
 
 # Blockbench LowPoly — Procedural Genesis of Cute Cartoon Assets
 
-100% pure-Python toolkit for the agent to **author low-poly 3D assets from code** and deliver them in 4 formats: `.bbmodel` (native Blockbench project), `.glb` (engine/runtime), preview PNGs and a link that opens the model directly in the Blockbench web app. Zero external dependencies, zero MCP, zero editor.
+100% pure-Python toolkit to **author low-poly 3D assets from code** and deliver them in 4 formats: `.bbmodel` (native Blockbench project), `.glb` (engine/runtime), preview PNGs and a link that opens the model directly in the Blockbench web app. Zero external dependencies, zero MCP, zero editor.
 
 ## Structure
 
@@ -17,7 +17,7 @@ scripts/bbglb.py     GLB exporter (glTF 2.0 binary, embedded texture)
 scripts/bburl.py     Blockbench web app link + verification roundtrip
 scripts/bbrender.py  software rasterizer: ortho/iso/hero previews
 templates/palettes_cute.json  7 curated palettes (roles: outline/base/light/dark/accent/blush/shadow)
-examples/mascote_cogumelo/    commented end-to-end example (build.py, previews, link)
+examples/mushroom_mascot/    commented end-to-end example (build.py, previews, link)
 references/           format spec, pitfalls, style guide, Blockbench workflow
 ```
 
@@ -82,8 +82,9 @@ open("link.txt","w").write(bburl.build_url(m, "asset"))
 - Finishing: `bleed(region, px=1)` (bleeds 1px border at junctions), `to_png(indexed=None)`, `palette_used()`.
 
 ### bbcheck.py
-- `bbcheck.check(path_or_dict, style=False, tex_override=None) -> dict(errors/warnings/infos/report)`.
-- CLI: `python3 bbcheck.py model.bbmodel [--style] [--tex texture.png]` (exit 1 if there is an error).
+- `bbcheck.check(path_or_dict, style=False, tex_override=None, detail=False, kind="default") -> dict(errors/warnings/infos/report)`.
+- `kind` calibrates the `--detail` thresholds: `mob`, `prop`, `vehicle`, `diorama`; `"default"` uses generic values.
+- CLI: `python3 bbcheck.py model.bbmodel [--style] [--detail] [--type mob|prop|vehicle|diorama] [--tex texture.png]` (exit 1 if there is an error).
 - Checks: uuid/refs of the outliner, texture index, UV within bounds, from<to, duplicate faces, zero area, stretch >1.5×, mesh planarity/winding, Java-block −16..32, tri budgets.
 - `--style`: pure black/white = ERROR; magenta = warning; palette >20 = warning; texel density variation >1.6× = warning.
 

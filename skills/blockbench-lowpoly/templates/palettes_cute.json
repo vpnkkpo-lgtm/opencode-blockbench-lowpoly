@@ -1,6 +1,6 @@
 {
   "_doc": "Cute cartoon palettes. Roles: outline (hard shadow/contour), base, light, dark (3-tone panel), accent (warm detail), blush (cheek), shadow (projected/cold shadow), background (preview background). NEVER pure black/white. Use with bbtex.load_palette() + bbtex.shade().",
-  "cogumelo": {
+  "mushroom": {
     "label": "Red mushroom (classic mascot)",
     "outline": [
       "#4a2d3a",
@@ -39,7 +39,7 @@
     ],
     "background": "#f2e6e0"
   },
-  "sapo": {
+  "frog": {
     "label": "Green frog/jade",
     "outline": [
       "#2e4a2a",
@@ -78,7 +78,7 @@
     ],
     "background": "#e4efe0"
   },
-  "gato": {
+  "cat": {
     "label": "Lavender/purple cat",
     "outline": [
       "#3d2e52",
@@ -117,7 +117,7 @@
     ],
     "background": "#ece6f2"
   },
-  "raposa": {
+  "fox": {
     "label": "Orange fox",
     "outline": [
       "#4a2d1e",
@@ -195,7 +195,7 @@
     ],
     "background": "#e0f0ec"
   },
-  "neve": {
+  "snow": {
     "label": "Snowy/light blue (never pure white)",
     "outline": [
       "#2e4257",
@@ -234,7 +234,7 @@
     ],
     "background": "#e8eef4"
   },
-  "doce": {
+  "candy": {
     "label": "Candy/bubblegum pink",
     "outline": [
       "#4a2438",

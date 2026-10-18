@@ -1,6 +1,6 @@
 {
   "_doc": "REALISTIC palettes (naturalistic low poly). Roles: outline (DEEP shadow — NOT an outline, no contour in this style), base, light, dark (value steps), accent (second material), blush (unused), shadow (projected), background. NEVER pure black/white.",
-  "floresta": {
+  "forest": {
     "label": "Forest (foliage + trunk)",
     "outline": [
       "#1f2618",
@@ -34,7 +34,7 @@
     ],
     "background": "#c2c6b4"
   },
-  "rocha": {
+  "rock": {
     "label": "Rock (slate + earth)",
     "outline": [
       "#2a2c30",
@@ -68,7 +68,7 @@
     ],
     "background": "#b7b9be"
   },
-  "couro": {
+  "leather": {
     "label": "Leather & wood (artisan)",
     "outline": [
       "#2a1d12",
@@ -102,7 +102,7 @@
     ],
     "background": "#c6baa6"
   },
-  "ferro": {
+  "iron": {
     "label": "Iron (matte steel + rust)",
     "outline": [
       "#26282c",
@@ -136,7 +136,7 @@
     ],
     "background": "#b3b5ba"
   },
-  "campo": {
+  "field": {
     "label": "Field (straw + poppy)",
     "outline": [
       "#33301a",

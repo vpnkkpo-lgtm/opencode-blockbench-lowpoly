@@ -1,6 +1,6 @@
 {
   "_doc": "HORROR palettes. Roles: outline (hard/wet shadow), base, light, dark (dirty dither), accent (high-charge accent), blush (unused/stain), shadow (projected), background. NEVER pure black/white.",
-  "zumbi": {
+  "zombie": {
     "label": "Zombie (rotting skin + sick eye)",
     "outline": [
       "#1e2a1e",
@@ -39,7 +39,7 @@
     ],
     "background": "#161b14"
   },
-  "vampiro": {
+  "vampire": {
     "label": "Vampire (pallor + crimson velvet)",
     "outline": [
       "#2b1420",
@@ -78,7 +78,7 @@
     ],
     "background": "#170c12"
   },
-  "abissal": {
+  "abyssal": {
     "label": "Abyssal (deep sea + bioluminescence)",
     "outline": [
       "#0e1b26",
@@ -117,7 +117,7 @@
     ],
     "background": "#08131a"
   },
-  "espectral": {
+  "spectral": {
     "label": "Spectral (ectoplasm + soul)",
     "outline": [
       "#232a44",
@@ -156,7 +156,7 @@
     ],
     "background": "#10131f"
   },
-  "gosma": {
+  "slime": {
     "label": "Slime (acid ooze + unstable core)",
     "outline": [
       "#1a2e10",

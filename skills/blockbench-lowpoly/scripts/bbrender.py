@@ -3,7 +3,8 @@
 bbrender.py — pure-Python software renderer to preview the model
 (without opening Blockbench). Orthographic, z-buffer, NEAREST texture, flat lighting.
 
-So the agent "sees" the result: front/side/iso renders + contact sheet.
+Produces front/side/iso renders and a contact sheet, so the result can be
+reviewed without opening Blockbench.
 
 Usage:
     from bbrender import render, render_sheet
@@ -22,7 +23,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import bbtex  # noqa: E402
 
 VIEWS = {
-    # name: (model->camera direction, up hint)
+    # name -> (camera direction, up hint)
     "front": ((0.0, 0.0, -1.0), (0.0, 1.0, 0.0)),
     "back": ((0.0, 0.0, 1.0), (0.0, 1.0, 0.0)),
     "side": ((1.0, 0.0, 0.0), (0.0, 1.0, 0.0)),
@@ -80,7 +81,7 @@ def render(model_or_baked, path, view="iso", size=384, bg=(0, 0, 0, 0), zoom=1.0
     right = _norm(_cross(up_hint, back))
     up = _norm(_cross(back, right))
 
-    # supersample for smoother edges
+    # supersampling, for smoother edges
     ss = max(1, int(supersample))
     W = size * ss
     H = size * ss
@@ -176,7 +177,7 @@ def render(model_or_baked, path, view="iso", size=384, bg=(0, 0, 0, 0), zoom=1.0
             for a, b in ((p0, p1), (p1, p2), (p2, p0)):
                 x0, y0, d0 = to_screen(a)
                 x1, y1, d1 = to_screen(b)
-                # Bresenham
+                # Bresenham line
                 xi, yi = int(round(x0)), int(round(y0))
                 xj, yj = int(round(x1)), int(round(y1))
                 dx = abs(xj - xi); dy = abs(yj - yi)

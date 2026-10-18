@@ -49,10 +49,9 @@ def guid():
     return str(_uuid.uuid4())
 
 
-# Fixed namespace for deterministic uuid: same names -> same uuids, on any
-# machine and on every rebuild. This makes the build byte-identical (golden rule 9)
-# and, most importantly, keeps animation keys (which reference the bone uuid)
-# valid when the script runs again.
+# Fixed namespace for deterministic uuids: the same names map to the same uuids
+# on any machine and on every rebuild. This makes the build byte-identical and
+# keeps animation keys — which reference the bone uuid — valid across rebuilds.
 DET_NAMESPACE = _uuid.UUID("1b0c8f2e-3a5d-4c7b-9e11-6d2f8a4b7c30")
 
 
@@ -378,7 +377,7 @@ class Mesh(_Node):
             tuple((2 * c - v[axis]) if i == axis else v[i] for i in range(3))
             for v in self.vertices
         ]
-        # mirroring inverts orientation: reverse vertex order of each face
+        # mirroring inverts orientation: reverse the vertex order of each face
         # (and the matching UVs) to keep the normal pointing outward.
         new_faces = []
         for f in self.faces:
@@ -570,7 +569,7 @@ class Model:
     def attach_texture_bytes(self, png_bytes, name="texture.png"):
         if png_bytes[:8] != b"\x89PNG\r\n\x1a\n":
             raise ValueError("attach_texture: the bytes are not a valid PNG")
-        # avoid exact duplicate
+        # skip exact duplicates
         for (p, n, u) in self.textures:
             if p == bytes(png_bytes) and n == name:
                 self._sync_primary()
@@ -799,7 +798,7 @@ class Model:
             "tex_used_pct": round(100.0 * area / total, 1) if total else 0.0,
         }
 
-    def validate(self, style=False, detail=False, tipo="default"):
+    def validate(self, style=False, detail=False, kind="default"):
         """Runs bbcheck on the in-memory model. Returns the check dict."""
         import os, sys
         sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -809,8 +808,8 @@ class Model:
         except ValueError:
             d = None
         if d is None:
-            return bbcheck.check({}, style=style, detail=detail, tipo=tipo)
-        return bbcheck.check(d, style=style, detail=detail, tipo=tipo)
+            return bbcheck.check({}, style=style, detail=detail, kind=kind)
+        return bbcheck.check(d, style=style, detail=detail, kind=kind)
 
     def animation(self, name, loop="loop", length=1.0):
         for a in self.animations:
@@ -896,7 +895,7 @@ class Model:
                     corners = face_uv_corners(fs.uv, fs.rotation)  # k-th vertex -> k-th corner
                     pts = [verts[i] for i in idx]
                     uvs = corners
-                    # Winding: identical to BB's OBJ exporter -> tris (2,1,0) and (3,2,0)
+                    # winding matches Blockbench's OBJ exporter: tris (2,1,0) and (3,2,0)
                     tris.append((pts[2], pts[1], pts[0], uvs[2], uvs[1], uvs[0]))
                     tris.append((pts[3], pts[2], pts[0], uvs[3], uvs[2], uvs[0]))
             else:
