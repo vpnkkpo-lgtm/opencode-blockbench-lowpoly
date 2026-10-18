@@ -87,13 +87,13 @@ DETAIL_TYPES = {
 }
 
 
-def _detail_lint(rep, elements, tipo="default"):
+def _detail_lint(rep, elements, kind="default"):
     """Fidelity: thin detail present, silhouette with rotation, shapes with bevel.
 
-    tipo = mob|prop|vehicle|diorama calibrates thresholds; "default" uses the
+    kind = mob|prop|vehicle|diorama calibrates thresholds; "default" uses the
     generic values (micro ≤25% of the largest dimension, no thin piece >8%).
     """
-    micro, min_frac, align_max = DETAIL_TYPES.get(tipo, (0.25, 0.08, 1.01))
+    micro, min_frac, align_max = DETAIL_TYPES.get(kind, (0.25, 0.08, 1.01))
     dims = []
     aligned = total = meshes = 0
     for el in elements:
@@ -117,21 +117,21 @@ def _detail_lint(rep, elements, tipo="default"):
     min_edge = min(d[1] for d in dims)
     fine = [n for (n, mn, mx) in dims if mn <= micro * scale]
     if min_edge > min_frac * scale:
-        rep.W("detail", f"[{tipo}] no small piece: smallest edge {min_edge:.2f}u = "
+        rep.W("detail", f"[{kind}] no small piece: smallest edge {min_edge:.2f}u = "
                         f"{100 * min_edge / scale:.0f}% of the largest dimension ({scale:.1f}u); "
                         f"micro must be ≤{100 * micro:.0f}% — use bbkit.on_face/grid_of")
     else:
-        rep.I("detail", f"[{tipo}] {len(fine)} detail pieces (≤{100 * micro:.0f}%); "
+        rep.I("detail", f"[{kind}] {len(fine)} detail pieces (≤{100 * micro:.0f}%); "
                         f"smallest edge {min_edge:.2f}u at scale {scale:.1f}u")
     if total >= 5 and aligned / total >= align_max:
-        rep.W("detail", f"[{tipo}] {aligned}/{total} cubes axis-aligned — generic "
+        rep.W("detail", f"[{kind}] {aligned}/{total} cubes axis-aligned — generic "
                         f"silhouette; tilt a key piece (5-15°) or use bbkit.bevel_box/taper_box")
     if meshes == 0 and total >= 5:
-        rep.W("detail", f"[{tipo}] no beveled/tapered/cylinder shape — 100% straight "
+        rep.W("detail", f"[{kind}] no beveled/tapered/cylinder shape — 100% straight "
                         f"boxes read as blockout (bbkit.bevel_box fixes that)")
 
 
-def check(path_or_dict, style=False, tex_override=None, detail=False, tipo="default"):
+def check(path_or_dict, style=False, tex_override=None, detail=False, kind="default"):
     rep = Report()
     if isinstance(path_or_dict, dict):
         model = path_or_dict
@@ -266,7 +266,7 @@ def check(path_or_dict, style=False, tex_override=None, detail=False, tipo="defa
         _style_lint(rep, elements, tex_pngs, tex_override, tex_w, tex_h, fv)
 
     if detail:
-        _detail_lint(rep, elements, tipo)
+        _detail_lint(rep, elements, kind)
 
     _uv_overlap_check(rep, elements)
     _zfight_check(rep, elements)
@@ -636,9 +636,9 @@ def main(argv):
     path = argv[0]
     style = "--style" in argv
     detail = "--detail" in argv
-    tipo = "default"
+    kind = "default"
     if "--type" in argv:
-        tipo = argv[argv.index("--type") + 1]
+        kind = argv[argv.index("--type") + 1]
         detail = True
     tex = None
     if "--tex" in argv:
@@ -647,7 +647,7 @@ def main(argv):
     fix = "--fix" in argv
     if fix:
         _apply_fix(path, argv)
-    r = check(path, style=style, tex_override=tex, detail=detail, tipo=tipo)
+    r = check(path, style=style, tex_override=tex, detail=detail, kind=kind)
     ok = r["report"].print() if not json_out else (not r["errors"])
     if json_out:
         import json as _j

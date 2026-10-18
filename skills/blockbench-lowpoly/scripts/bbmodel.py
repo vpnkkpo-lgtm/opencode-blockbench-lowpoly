@@ -798,7 +798,7 @@ class Model:
             "tex_used_pct": round(100.0 * area / total, 1) if total else 0.0,
         }
 
-    def validate(self, style=False, detail=False, tipo="default"):
+    def validate(self, style=False, detail=False, kind="default"):
         """Runs bbcheck on the in-memory model. Returns the check dict."""
         import os, sys
         sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -808,8 +808,8 @@ class Model:
         except ValueError:
             d = None
         if d is None:
-            return bbcheck.check({}, style=style, detail=detail, tipo=tipo)
-        return bbcheck.check(d, style=style, detail=detail, tipo=tipo)
+            return bbcheck.check({}, style=style, detail=detail, kind=kind)
+        return bbcheck.check(d, style=style, detail=detail, kind=kind)
 
     def animation(self, name, loop="loop", length=1.0):
         for a in self.animations:

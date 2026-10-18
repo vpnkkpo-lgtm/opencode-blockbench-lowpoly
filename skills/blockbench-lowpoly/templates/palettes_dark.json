@@ -1,6 +1,6 @@
 {
   "_doc": "DARK palettes (dark fantasy / grimdark). Roles: outline (smoke/shadow), base, light, dark (2-tone panel), accent (warm accent), blush (unused/scar), shadow (projected), background. NEVER pure black/white.",
-  "cavaleiro": {
+  "knight": {
     "label": "Dark knight (dark steel + ember)",
     "outline": [
       "#14161c",
@@ -39,7 +39,7 @@
     ],
     "background": "#0b0d11"
   },
-  "necromante": {
+  "necromancer": {
     "label": "Necromancer (purple cloak + runes)",
     "outline": [
       "#17101f",
@@ -78,7 +78,7 @@
     ],
     "background": "#0a070e"
   },
-  "forja": {
+  "forge": {
     "label": "Forge (dirty bronze + ember)",
     "outline": [
       "#23150c",
@@ -117,7 +117,7 @@
     ],
     "background": "#120a05"
   },
-  "pantano": {
+  "swamp": {
     "label": "Swamp (dark slime + rusted iron)",
     "outline": [
       "#1a2015",
