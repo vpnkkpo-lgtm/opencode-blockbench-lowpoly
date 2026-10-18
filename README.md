@@ -1,6 +1,6 @@
 # 🧱 Blockbench LowPoly
 
-### Forje assets 3D cute-cartoon por código — direto no OpenCode.
+### Forge cute-cartoon 3D assets from code — right inside OpenCode.
 
 [![GitHub stars](https://img.shields.io/github/stars/vpnkkpo-lgtm/opencode-blockbench-lowpoly?style=social)](https://github.com/vpnkkpo-lgtm/opencode-blockbench-lowpoly/stargazers)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
@@ -9,29 +9,29 @@
 [![Zero Deps](https://img.shields.io/badge/deps-zero-brightgreen)](#)
 [![Blockbench](https://img.shields.io/badge/Blockbench-web%20app-0ea5e9)](https://web.blockbench.net)
 
-> **Sem Blender. Sem editor. Sem MCP. Sem dependências.** Só Python puro e um agente que obedece.
-> Descreva um personagem, um prop, uma arma, um mob — e receba `.bbmodel`, `.glb`, previews PNG e um link que abre o modelo **direto no web app do Blockbench**. Tudo determinístico, tudo versionável, tudo em código.
+> **No Blender. No editor. No MCP. No dependencies.** Just pure Python and an agent that obeys.
+> Describe a character, a prop, a weapon, a mob — and get `.bbmodel`, `.glb`, preview PNGs and a link that opens the model **directly in the Blockbench web app**. Everything deterministic, everything versionable, everything in code.
 
 ---
 
-## ⚡ O que você ganha
+## ⚡ What you get
 
-| Entrega | Arquivo | Pra quê |
+| Deliverable | File | Purpose |
 |---|---|---|
-| Projeto nativo | `.bbmodel` | Abrir/editar no Blockbench |
-| Motor/engine | `.glb` | Unity, Godot, Unreal, Three.js |
-| Preview | `preview_sheet.png` | QC visual rápido (front/iso/side) |
-| Link compartilhável | `link.txt` | Abre o modelo no web app do Blockbench |
+| Native project | `.bbmodel` | Open/edit in Blockbench |
+| Engine/runtime | `.glb` | Unity, Godot, Unreal, Three.js |
+| Preview | `preview_sheet.png` | Fast visual QC (front/iso/side) |
+| Shareable link | `link.txt` | Opens the model in the Blockbench web app |
 
-Um único `build.py`. Roda de novo, byte-idêntico. Itera em segundos.
+One single `build.py`. Run it again, byte-identical. Iterate in seconds.
 
 ---
 
-## 🚀 Instalação (OpenCode v2)
+## 🚀 Installation (OpenCode v2)
 
-### Opção A — como plugin (recomendado)
+### Option A — as a plugin (recommended)
 
-Adicione ao seu `opencode.json(c)`:
+Add to your `opencode.json(c)`:
 
 ```jsonc
 {
@@ -42,7 +42,7 @@ Adicione ao seu `opencode.json(c)`:
 }
 ```
 
-Ou clone e aponte localmente:
+Or clone and point locally:
 
 ```jsonc
 {
@@ -50,15 +50,15 @@ Ou clone e aponte localmente:
 }
 ```
 
-Pronto. A skill `blockbench-lowpoly` é registrada automaticamente e o agente passa a saber forjar assets low poly.
+Done. The `blockbench-lowpoly` skill is registered automatically and the agent learns to forge low-poly assets.
 
-### Opção B — como skill solta
+### Option B — as a standalone skill
 
-Copie a pasta `skills/blockbench-lowpoly` para `~/.config/opencode/skills/` (global) ou `.opencode/skills/` (projeto). Funciona sem plugin.
+Copy the `skills/blockbench-lowpoly` folder to `~/.config/opencode/skills/` (global) or `.opencode/skills/` (project). Works without the plugin.
 
 ---
 
-## 🎬 Quickstart (30 segundos)
+## 🎬 Quickstart (30 seconds)
 
 ```python
 import sys, os
@@ -66,98 +66,98 @@ sys.path.insert(0, "skills/blockbench-lowpoly/scripts")
 from bbmodel import Model
 import bbtex, bbcheck, bbrender, bburl
 
-m = Model("cogumelo", tex_w=128, tex_h=128, density=2)
-corpo = m.group("corpo", origin=(8, 0, 8))
-m.cube("tronco", (5, 0, 5), (11, 8, 11), group=corpo,
+m = Model("mushroom", tex_w=128, tex_h=128, density=2)
+body = m.group("body", origin=(8, 0, 8))
+m.cube("trunk", (5, 0, 5), (11, 8, 11), group=body,
        faces=["north", "east", "south", "west"])
 
 c = bbtex.Canvas.for_model(m)
-c.panel(m.uv_regions()[("tronco", "north")], "#f6ddb8", light="#fdefd6", dark="#e8c894")
+c.panel(m.uv_regions()[("trunk", "north")], "#f6ddb8", light="#fdefd6", dark="#e8c894")
 png = c.to_png()
 m.attach_texture_bytes(png)
 
-rep = bbcheck.check(m.to_dict(), style=True, tex_override=png)  # 0 erros, 0 avisos
+rep = bbcheck.check(m.to_dict(), style=True, tex_override=png)  # 0 errors, 0 warnings
 bbrender.render_sheet(m, "preview.png", size=384)
 m.save("asset.bbmodel")
 open("asset.glb", "wb").write(__import__("bbglb").build_glb(m.bake(), "asset"))
 open("link.txt", "w").write(bburl.build_url(m, "asset"))
 ```
 
-Saída: `asset.bbmodel` + `asset.glb` + `preview.png` + `link.txt`. **Zero erros. Zero avisos.** 🎯
+Output: `asset.bbmodel` + `asset.glb` + `preview.png` + `link.txt`. **Zero errors. Zero warnings.** 🎯
 
 ---
 
-## 🛠️ Pipeline completo
+## 🛠️ Full pipeline
 
 ```
-planeje silhueta → escolha paleta → construa geo → pinte textura → valide → preview → entregue
+plan silhouette → pick palette → build geometry → paint texture → validate → preview → ship
 ```
 
-1. **Planeje no papel** — silhueta legível a 64px, cabeça 35–50% em "cute", orçamento de tris (prop ≤800, personagem ≤3000).
-2. **Paleta** — `templates/palettes_cute.json` ou ~8–20 cores próprias. **Nunca** `#000000`/`#ffffff` puros.
-3. **Geometria** — `Model.cube` / `Model.mesh`; `from < to`; pivô na junta quando rigado.
-4. **Textura** — Canvas com `uv_regions()` como mapa: `panel`, `outline_region`, `eyes/blush/mouth_smile`, `spot(snap=True)`.
-5. **Valide** — `bbcheck.check(d, style=True)` → persiga **0 erros e 0 avisos**.
-6. **Preview + QC visual** — `render_sheet` + `render(..., view="hero")` e **leia** os PNGs (confira pixels críticos em ASCII).
-7. **Entregue** — `save .bbmodel`, `bbglb.build_glb`, `bburl.build_url` → `link.txt`. Itere rodando o build de novo.
-8. **Animado?** — chame `bbmodel.preserve_animations(prev, m)` antes do save.
+1. **Plan on paper** — silhouette readable at 64px, head 35–50% in "cute" style, tri budget (prop ≤800, character ≤3000).
+2. **Palette** — `templates/palettes_cute.json` or ~8–20 colors of your own. **Never** pure `#000000`/`#ffffff`.
+3. **Geometry** — `Model.cube` / `Model.mesh`; `from < to`; pivot on the joint when rigged.
+4. **Texture** — Canvas with `uv_regions()` as the map: `panel`, `outline_region`, `eyes/blush/mouth_smile`, `spot(snap=True)`.
+5. **Validate** — `bbcheck.check(d, style=True)` → aim for **0 errors and 0 warnings**.
+6. **Preview + visual QC** — `render_sheet` + `render(..., view="hero")` and **read** the PNGs (check critical pixels in ASCII).
+7. **Ship** — `save .bbmodel`, `bbglb.build_glb`, `bburl.build_url` → `link.txt`. Iterate by re-running the build.
+8. **Animated?** — call `bbmodel.preserve_animations(prev, m)` before save.
 
 ---
 
-## 📚 API essencial
+## 📚 Essential API
 
 ### `bbmodel.py`
 - `Model(name, tex_w, tex_h, density=2, format="free")`
 - `m.group(name, origin, rotation=..., parent=...)`
 - `m.cube(name, frm, to, group, faces=None, uv=None, mirror_uv=False, inflate=0.0)`
-- `m.mesh(name, vertices, faces, group, uv="planar")` — só `free`
+- `m.mesh(name, vertices, faces, group, uv="planar")` — `free` only
 - `Cube.mirror(axis, center)` / `Mesh.mirror(axis, center)`
 - `m.uv_regions()` · `m.bake()` · `m.stats()` · `m.save(path)` · `Model.load(path)`
 - `bbmodel.preserve_animations(prev, m)` · `bbmodel.det_uuid(kind, name)`
 
 ### `bbtex.py`
 - `Canvas.for_model(m)` · `encode_png`/`decode_png` · `load_palette`
-- Escrita: `set/rect/line_h/line_v/ellipse/fill_region`
-- Regiões: `panel/ao/outline_region/hstripes/vstripes/dots/checker/dither`
-- Cara: `eyes/blush/mouth_smile/mouth_o`
-- Pintas: `spot(region, cx_frac, cy_frac, r, snap=True)` (r≥2.4)
-- Final: `bleed(region, px=1)` · `to_png()` · `palette_used()`
+- Writing: `set/rect/line_h/line_v/ellipse/fill_region`
+- Regions: `panel/ao/outline_region/hstripes/vstripes/dots/checker/dither`
+- Face: `eyes/blush/mouth_smile/mouth_o`
+- Spots: `spot(region, cx_frac, cy_frac, r, snap=True)` (r≥2.4)
+- Finish: `bleed(region, px=1)` · `to_png()` · `palette_used()`
 
 ### `bbcheck.py`
-- `check(path_ou_dict, style=False, tex_override=None)` → `{errors, warnings, infos, report}`
-- CLI: `python3 bbcheck.py modelo.bbmodel --style --tex textura.png` (exit 1 se erro)
-- Checa uuid/refs, UV, from<to, faces duplicadas, área zero, stretch >1.5×, winding, Java-block, budgets
+- `check(path_or_dict, style=False, tex_override=None)` → `{errors, warnings, infos, report}`
+- CLI: `python3 bbcheck.py model.bbmodel --style --tex texture.png` (exit 1 on error)
+- Checks uuid/refs, UV, from<to, duplicate faces, zero area, stretch >1.5×, winding, Java-block, budgets
 
 ### `bbglb.py` · `bburl.py` · `bbrender.py`
 - `build_glb(baked, name) -> bytes` · `check_glb(data)`
-- `build_url(model, nome) -> str` · `verify(url)` (roundtrip)
+- `build_url(model, name) -> str` · `verify(url)` (roundtrip)
 - `render(model, path, view="iso"|"front"|"side"|"hero", size, supersample=2)` · `render_sheet(model, path)`
 
 ---
 
-## 🎨 Estilo "cute cartoon refinado"
+## 🎨 "Cute cartoon refined" style
 
-- Silhueta legível a **64px**
-- Cabeça **35–50%** do corpo (proporção cute)
-- **8–20 cores**, cada material com 2–3 tons (base/light/dark) + rim
-- Sombra = cor escura saturada (nunca preto puro)
-- Densidade de texel ~**2 px/unidade** igual para tudo
-- Faces escondidas **omitidas** (`faces=[...]`)
-- Sangria de 1px (`bleed`) entre ilhas de UV que se tocam em 3D
-- Circunferências pequenas: raio ≥2.4, centro inteiro (`snap=True`)
+- Silhouette readable at **64px**
+- Head **35–50%** of the body (cute proportions)
+- **8–20 colors**, each material with 2–3 tones (base/light/dark) + rim
+- Shadow = saturated dark color (never pure black)
+- Texel density ~**2 px/unit** equal for everything
+- Hidden faces **omitted** (`faces=[...]`)
+- 1px bleed (`bleed`) between UV islands touching in 3D
+- Small circumferences: radius ≥2.4, integer center (`snap=True`)
 
 ---
 
-## 📂 Estrutura
+## 📂 Structure
 
 ```
 opencode-blockbench-lowpoly/
-├── src/index.ts              # plugin OpenCode v2 (registra a skill)
-├── skills/blockbench-lowpoly/ # a skill (SKILL.md + scripts + refs + templates + example)
+├── src/index.ts              # OpenCode v2 plugin (registers the skill)
+├── skills/blockbench-lowpoly/ # the skill (SKILL.md + scripts + refs + templates + example)
 │   ├── SKILL.md
 │   ├── scripts/   (bbmodel, bbtex, bbcheck, bbglb, bburl, bbrender)
-│   ├── references/ (spec, pitfalls, estilo, workflow)
-│   ├── templates/  (palettes_cute.json, 7 paletas)
+│   ├── references/ (spec, pitfalls, style, workflow)
+│   ├── templates/  (palettes_cute.json, 7 palettes)
 │   └── examples/  (mascote_cogumelo end-to-end)
 ├── package.json
 ├── LICENSE
@@ -166,53 +166,64 @@ opencode-blockbench-lowpoly/
 
 ---
 
-## 🔗 Link do web app — a extensão é obrigatória
+## 🔗 Web app link — the extension is mandatory
 
 ```
-https://web.blockbench.net/#loadtype=json&loadname=NOME.bbmodel&loaddata=DADOS
+https://web.blockbench.net/#loadtype=json&loadname=NAME.bbmodel&loaddata=DATA
 ```
 
-O web app escolhe o codec pela **extensão** do `loadname`. Sem `.bbmodel`, nenhum codec casa → **"invalid format"**. `bburl.build_url()` já acrescenta a extensão e `bburl.verify()` falha se faltar. **Nunca** monte a URL à mão.
+The web app picks the codec by the **extension** of `loadname`. Without `.bbmodel`, no codec matches → **"invalid format"**. `bburl.build_url()` already appends the extension and `bburl.verify()` fails if it's missing. **Never** build the URL by hand.
 
 ---
 
-## 🏆 Por que este repo merece uma ⭐
+## 🏆 Why this repo deserves a ⭐
 
-- **Determinístico** — seed fixa, uuids determinísticos (`det_uuid`), rebuilds byte-idênticos.
-- **Validado** — `bbcheck --style` garante 0 erros/0 avisos antes de entregar.
-- **Completo** — geometria + textura + preview + GLB + link em um único script.
-- **Zero atrito** — Python puro, sem MCP, sem editor, sem dependências.
-- **Compartilhável** — link que abre o modelo direto no web app do Blockbench.
-- **Animável** — preserva animações entre rebuilds (`preserve_animations`).
+- **Deterministic** — fixed seed, deterministic uuids (`det_uuid`), byte-identical rebuilds.
+- **Validated** — `bbcheck --style` guarantees 0 errors/0 warnings before shipping.
+- **Complete** — geometry + texture + preview + GLB + link in a single script.
+- **Zero friction** — pure Python, no MCP, no editor, no dependencies.
+- **Shareable** — a link that opens the model straight in the Blockbench web app.
+- **Animatable** — preserves animations across rebuilds (`preserve_animations`).
 
-Se este projeto te economizou horas de modelagem manual, **deixe uma star** ⭐ — é o combustível para continuar forjando.
+If this project saved you hours of manual modeling, **leave a star** ⭐ — it's the fuel to keep forging.
 
 [![Star this repo](https://img.shields.io/github/stars/vpnkkpo-lgtm/opencode-blockbench-lowpoly?style=social)](https://github.com/vpnkkpo-lgtm/opencode-blockbench-lowpoly/stargazers)
 
 ---
 
-## 📖 Referências
+## ☕ Support / Donate
 
-- `skills/blockbench-lowpoly/references/bbmodel-spec.md` — spec canônica do formato
-- `skills/blockbench-lowpoly/references/pitfalls.md` — catálogo de armadilhas (sintoma → causa → correção)
-- `skills/blockbench-lowpoly/references/style-cute-cartoon.md` — direção de arte
-- `skills/blockbench-lowpoly/references/blockbench-workflow.md` — testar/editar/exportar
+If this toolkit helped you ship assets faster, consider supporting its development.
+
+- **Pix**: (configure your Pix key here)
+- **GitHub Sponsors**: https://github.com/sponsors/vpnkkpo-lgtm
+
+Every contribution keeps the forge burning. 🔥
 
 ---
 
-## 🤝 Contribuir
+## 📖 References
 
-Issues e PRs são bem-vindos. Se você forjou um asset legal com este toolkit, abra um PR adicionando-o em `examples/`.
+- `skills/blockbench-lowpoly/references/bbmodel-spec.md` — canonical format spec
+- `skills/blockbench-lowpoly/references/pitfalls.md` — pitfall catalog (symptom → cause → fix)
+- `skills/blockbench-lowpoly/references/style-cute-cartoon.md` — art direction
+- `skills/blockbench-lowpoly/references/blockbench-workflow.md` — test/edit/export
 
-## 📜 Licença
+---
 
-MIT — faça o que quiser, só mantenha o aviso.
+## 🤝 Contributing
+
+Issues and PRs are welcome. If you forged a cool asset with this toolkit, open a PR adding it under `examples/`.
+
+## 📜 License
+
+MIT — do whatever you want, just keep the notice.
 
 ---
 
 <p align="center">
-  <b>Feito com 💜 para a comunidade OpenCode.</b><br>
-  <a href="https://github.com/vpnkkpo-lgtm/opencode-blockbench-lowpoly/stargazers">⭐ Star no GitHub</a> ·
-  <a href="https://github.com/vpnkkpo-lgtm/opencode-blockbench-lowpoly/issues">🐛 Reportar bug</a> ·
+  <b>Built with 💜 for the OpenCode community.</b><br>
+  <a href="https://github.com/vpnkkpo-lgtm/opencode-blockbench-lowpoly/stargazers">⭐ Star on GitHub</a> ·
+  <a href="https://github.com/vpnkkpo-lgtm/opencode-blockbench-lowpoly/issues">🐛 Report a bug</a> ·
   <a href="https://github.com/vpnkkpo-lgtm/opencode-blockbench-lowpoly/fork">🍴 Fork</a>
 </p>

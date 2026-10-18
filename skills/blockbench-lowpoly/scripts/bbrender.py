@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
 """
-bbrender.py — renderizador software em Python puro para pré-visualizar o modelo
-(sem abrir o Blockbench). Ortográfico, z-buffer, textura NEAREST, luz flat.
+bbrender.py — pure-Python software renderer to preview the model
+(without opening Blockbench). Orthographic, z-buffer, NEAREST texture, flat lighting.
 
-Assim o agente "vê" o resultado: renders de frente/lado/iso + folha de contato.
+So the agent "sees" the result: front/side/iso renders + contact sheet.
 
-Uso:
+Usage:
     from bbrender import render, render_sheet
     render(model, "preview.png", view="iso", size=384)
-    render_sheet(model, "sheet.png")          # frente + iso + lado
+    render_sheet(model, "sheet.png")          # front + iso + side
 
-Views: front, back, side (leste), left, top, iso, hero (3/4 baixo).
+Views: front, back, side (east), left, top, iso, hero (low 3/4).
 """
 
 import math
@@ -22,7 +22,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import bbtex  # noqa: E402
 
 VIEWS = {
-    # nome: (direção modelo->câmera, up hint)
+    # name: (model->camera direction, up hint)
     "front": ((0.0, 0.0, -1.0), (0.0, 1.0, 0.0)),
     "back": ((0.0, 0.0, 1.0), (0.0, 1.0, 0.0)),
     "side": ((1.0, 0.0, 0.0), (0.0, 1.0, 0.0)),
@@ -69,7 +69,7 @@ def _light_dir():
 
 def render(model_or_baked, path, view="iso", size=384, bg=(0, 0, 0, 0), zoom=1.0,
            ambient=0.58, key=0.45, fill=0.18, supersample=2, outline=False):
-    """Renderiza uma view para PNG. bg: RGBA (padrão transparente)."""
+    """Render a view to PNG. bg: RGBA (default transparent)."""
     baked = _baked(model_or_baked)
     tris = baked["tris"]
     tex_w = baked.get("tex_w") or 16
@@ -80,7 +80,7 @@ def render(model_or_baked, path, view="iso", size=384, bg=(0, 0, 0, 0), zoom=1.0
     right = _norm(_cross(up_hint, back))
     up = _norm(_cross(back, right))
 
-    # superseample pra bordas menos serrilhadas
+    # supersample for smoother edges
     ss = max(1, int(supersample))
     W = size * ss
     H = size * ss
@@ -93,7 +93,7 @@ def render(model_or_baked, path, view="iso", size=384, bg=(0, 0, 0, 0), zoom=1.0
     for (p0, p1, p2, *_uv) in tris:
         pts.extend((proj(p0), proj(p1), proj(p2)))
     if not pts:
-        raise ValueError("modelo vazio")
+        raise ValueError("empty model")
     xs = [p[0] for p in pts]
     ys = [p[1] for p in pts]
     span_x = max(max(xs) - min(xs), 1e-6)
@@ -163,7 +163,7 @@ def render(model_or_baked, path, view="iso", size=384, bg=(0, 0, 0, 0), zoom=1.0
                 zbuf[row + px_] = depth
 
     if outline:
-        # desenha arestas dos triângulos (contorno/toon)
+        # draws triangle edges (outline/toon)
         def plot(px_, py_, depth, col_):
             if px_ < 0 or py_ < 0 or px_ >= W or py_ >= H:
                 return
@@ -231,7 +231,7 @@ def _downsample(src, W, H, ss):
 
 def render_sheet(model_or_baked, path, views=("front", "iso", "side"), size=256,
                  bg=(235, 236, 240, 255)):
-    """Folha de contato com várias views lado a lado."""
+    """Contact sheet with several views side by side."""
     n = len(views)
     total_w = size * n
     sheet = bytearray(bytes(bg) * (total_w * size))
@@ -255,11 +255,11 @@ def render_sheet(model_or_baked, path, views=("front", "iso", "side"), size=256,
 
 def _demo():
     import bbmodel as bm
-    m = bm.Model("demo_render", tex_w=128, tex_h=128, density=2)
-    g = m.group("raiz")
-    m.cube("pernas", [2, 0, 2], [14, 6, 14], group=g)
-    m.cube("cabeca", [1, 6, 1], [15, 16, 15], group=g)
-    m.cube("bico", [6, 9, 0], [10, 11, 3], group=g)
+    m = bm.Model("render_demo", tex_w=128, tex_h=128, density=2)
+    g = m.group("root")
+    m.cube("legs", [2, 0, 2], [14, 6, 14], group=g)
+    m.cube("head", [1, 6, 1], [15, 16, 15], group=g)
+    m.cube("beak", [6, 9, 0], [10, 11, 3], group=g)
 
     c = bbtex.Canvas(128, 128, fill=(0, 0, 0, 0))
     for name, d in m.uv_regions().items():
@@ -273,7 +273,7 @@ def _demo():
     dec = bbtex.decode_png(data)
     assert dec["width"] == 192 * 3 and dec["height"] == 192
     solid = sum(1 for i in range(0, len(dec["rgba"]), 4 * 37) if dec["rgba"][i + 3] > 0)
-    assert solid > 50, "render saiu vazio?"
+    assert solid > 50, "render came out empty?"
     one = render(m, os.path.join(tempfile.gettempdir(), "bbrender_iso.png"), "iso", 192)
     assert len(one) > 500
     print(f"bbrender smoke OK — sheet 3 views + iso ({len(data)} bytes)")
@@ -281,14 +281,14 @@ def _demo():
 
 if __name__ == "__main__":
     if len(sys.argv) >= 2 and sys.argv[1] not in ("--demo",):
-        # CLI: bbrender.py modelo.bbmodel saida.png [view] [size]
+        # CLI: bbrender.py model.bbmodel output.png [view] [size]
         import bbmodel as bm
         model = bm.Model.load(sys.argv[1])
         out = sys.argv[2] if len(sys.argv) > 2 else "preview.png"
         view = sys.argv[3] if len(sys.argv) > 3 else "iso"
         size = int(sys.argv[4]) if len(sys.argv) > 4 else 384
         render(model, out, view=view, size=size)
-        print(f"render salvo em {out} ({view}, {size}px)")
+        print(f"render saved to {out} ({view}, {size}px)")
     elif len(sys.argv) == 1 or sys.argv[1] == "--demo":
         _demo()
     else:

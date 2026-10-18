@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
 """
-Mascote Cogumelo — exemplo DIDÁTICO da ESTRUTURA do pipeline blockbench-lowpoly.
+Mushroom Mascot — DIDACTIC example of the STRUCTURE of the blockbench-lowpoly pipeline.
 
-LEIA este script para entender a estrutura: grupos -> cubos -> uv_regions ->
-pintura cartoon -> validação (bbcheck) -> GLB -> previews -> link do web app.
-Depois construa o SEU asset do zero. Este arquivo é referência de ESTRUTURA,
-não uma base para copiar/retexturar.
+READ this script to understand the structure: groups -> cubes -> uv_regions ->
+cartoon painting -> validation (bbcheck) -> GLB -> previews -> web app link.
+Then build YOUR asset from scratch. This file is a STRUCTURE reference,
+not a base to copy/retexture.
 
     python3 build.py
 
-Saídas (geradas nesta pasta quando você rodar): mascote.bbmodel, mascote.glb,
+Outputs (generated in this folder when you run it): mascote.bbmodel, mascote.glb,
 preview_sheet.png, preview_hero.png, link.txt
 """
 
@@ -29,8 +29,8 @@ import bburl  # noqa: E402
 
 PAL = bbtex.load_palette(os.path.join(HERE, "..", "..", "templates", "palettes_cute.json"),
                          "cogumelo")
-# paleta final do mascote: 8 cores exatas (nada de shade() ad-hoc, senão o
-# contador de cores estoura o alvo de 8-20 do guia de estilo)
+# final mascot palette: exactly 8 colors (no ad-hoc shade(), otherwise the
+# color counter exceeds the 8-20 target of the style guide)
 C_EYE = PAL["outline"][0]      # #4a2d3a
 C_BLUSH = PAL["blush"][0]      # #f2a0a8
 C_CAP = PAL["base"][0]         # #e05a5a
@@ -83,19 +83,19 @@ def paint(m):
     def panel_cap(region, base=C_CAP, light=C_CAP_L, dark=C_CAP_D):
         c.panel(region, base, light=light, dark=dark)
 
-    # -- tronco (creme) ------------------------------------------------------
+    # -- trunk (cream) ------------------------------------------------------
     for face in ("east", "west", "south"):
         panel_cream(r("tronco", face))
     c.panel(r("tronco", "down"), C_CREAM_AO, light=C_CREAM, dark=C_CREAM_AO)
 
-    # rosto (norte): olhos + bochechas + sorriso (tudo acima dos pés!)
+    # face (north): eyes + blush + smile (all above the feet!)
     face_reg = r("tronco", "north")
     panel_cream(face_reg)
     c.eyes(face_reg, C_EYE, C_CREAM_L, size=2, gap=5, y_frac=0.28)
     c.blush(face_reg, C_BLUSH, y_frac=0.5, inset=0, width=3)
     c.mouth_smile(face_reg, C_EYE, y_frac=0.62, width=4)
 
-    # -- chapéu (vermelho) ----------------------------------------------------
+    # -- hat (red) ----------------------------------------------------
     for face in ("north", "east", "south", "west"):
         region = r("chapeu", face)
         panel_cap(region)
@@ -113,7 +113,7 @@ def paint(m):
     c.spot(top_reg, 0.66, 0.4, 2.5, color=C_CREAM_L, snap=True)
     c.spot(top_reg, 0.4, 0.66, 1.5, color=C_CREAM, snap=True)
 
-    # -- braços e pés --------------------------------------------------------
+    # -- arms and feet --------------------------------------------------------
     for el in ("braco_l", "braco_r", "pe_l", "pe_r"):
         for face in ("north", "east", "south", "west", "up", "down"):
             if (el, face) in reg:
@@ -128,31 +128,31 @@ def main():
     m.attach_texture_bytes(png)
 
     info = m.stats()
-    print(f"mascote: {info}")
+    print(f"mascot: {info}")
 
-    # 1. validação (com lint de estilo)
+    # 1. validation (with style lint)
     r = bbcheck.check(m.to_dict(), style=True)
     ok = r["report"].print()
-    assert ok, "bbcheck achou erros no exemplo!"
+    assert ok, "bbcheck found errors in the example!"
 
-    # 2. salvar .bbmodel
+    # 2. save .bbmodel
     bb_path = os.path.join(HERE, "mascote.bbmodel")
     m.save(bb_path)
-    print(f"salvo {bb_path}")
+    print(f"saved {bb_path}")
 
-    # 3. GLB (pra engine)
+    # 3. GLB (for the engine)
     glb_path = os.path.join(HERE, "mascote.glb")
     _, size = bbglb.export_glb(m, glb_path)
     glb_ok, problems = bbglb.check_glb(open(glb_path, "rb").read())
     assert glb_ok, problems
-    print(f"salvo {glb_path} ({size} bytes, GLB válido)")
+    print(f"saved {glb_path} ({size} bytes, valid GLB)")
 
-    # 4. previews (o agente olha esses PNGs pra QC visual)
+    # 4. previews (the agent looks at these PNGs for visual QC)
     bbrender.render_sheet(m, os.path.join(HERE, "preview_sheet.png"), size=256)
     bbrender.render(m, os.path.join(HERE, "preview_hero.png"), "hero", 384)
-    print("previews salvos")
+    print("previews saved")
 
-    # 5. link do web app (abre no navegador sem download)
+    # 5. web app link (opens in the browser without download)
     url = bburl.build_url(m, name="mascote_cogumelo")
     bburl.check_url(url)
     with open(os.path.join(HERE, "link.txt"), "w", encoding="utf-8") as fh:

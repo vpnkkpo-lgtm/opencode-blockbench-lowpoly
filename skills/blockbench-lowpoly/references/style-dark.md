@@ -1,54 +1,54 @@
-# Guia de estilo — sombrio / dark fantasy (grimdark)
+# Style guide — dark / dark fantasy (grimdark)
 
-Premissa técnica: luz neutra no render/GLB — o clima **bleak** vem da textura: valores escuros, contraste alto, desgaste pintado. Não é terror (orgânico/doente); aqui é **solene, pesado, corroído**.
+Technical premise: neutral lighting in render/GLB — the **bleak** mood comes from the texture: dark values, high contrast, painted wear. This is not horror (organic/sick); here it's **solemn, heavy, corroded**.
 
-## 1. Silhueta pesada
+## 1. Heavy silhouette
 
-- Massa e peso: ombros/ombreiras LARGOS (mais que a cintura), elmo/capuz, babeira/capa como bloco retangular atrás, botas largas.
-- Proporção 4–6 cabeças (heroica-monstruosa, não chibi). Postura estática, frontal, imponente.
-- Camadas: ombreira sobre braço, cinto sobre manto, capa quebra a silhueta atrás. 2–3 massas, sem detalhe fino.
+- Mass and weight: shoulders/pauldrons WIDE (wider than the waist), helmet/hood, gorget/cape as a rectangular block behind, wide boots.
+- Proportion 4–6 heads (heroic-monstrous, not chibi). Static, frontal, imposing pose.
+- Layers: pauldron over arm, belt over cloak, cape breaking the silhouette behind. 2–3 masses, no fine detail.
 
-## 2. Paleta (sombrio)
+## 2. Palette (dark)
 
-- Base: charcoal `#3e4450`, ferro `#4a4e59`, couro velho, manto vinho/roxo. Tudo **dessaturado**.
-- Contraste ALTO: sombra quase preta (`#14161c`, nunca `#000000`) contra `metal` claro. Meio-tons somem; pule direto do dark pro light.
-- **1 acento quente por peça** — brasa `#d87a2a`, runa `#4ec8a0`, sangue seco `#8a3a2e` — é o que dá "vida" no meio do blefe.
-- Paletas prontas: `templates/palettes_dark.json` (`cavaleiro`, `necromante`, `forja`, `pantano`).
+- Base: charcoal `#3e4450`, iron `#4a4e59`, old leather, wine/purple cloak. Everything **desaturated**.
+- HIGH contrast: shadow almost black (`#14161c`, never `#000000`) against light `metal`. Mid-tones vanish; jump straight from dark to light.
+- **1 warm accent per piece** — ember `#d87a2a`, rune `#4ec8a0`, dried blood `#8a3a2e` — that's what gives "life" in the middle of the bleakness.
+- Ready palettes: `templates/palettes_dark.json` (`knight`, `necromancer`, `forge`, `swamp`).
 
-## 3. Superfície: desgaste e corrosão
+## 3. Surface: wear and corrosion
 
-- `panel` com 2 tons (light/dark) funciona — mas **assimétrico**: risque com `set` avulso as linhas do panel (falha de 1px) para não parecer novo.
-- Quinas superiores: risco de 1px `light` curto (2–3px) nas arestas expostas. É o "metal raspado".
-- Base das peças (bainha do manto, solas, saia da armadura): 1–2px de `dither` do tom `shadow` — sujeira de chão.
-- Metal: separação DURA por face — topo `light`/`metal`, lateral `base`, fundo `dark`. Sem gradiente; 1px de transição no máximo.
-- Tecido: `vstripes` 2 tons (dobras verticais) + `ao` em baixo. Corrente/anel: `dots(step=2)` em coluna.
+- `panel` with 2 tones (light/dark) works — but **asymmetric**: scratch the panel lines with loose `set` calls (1px gaps) so it doesn't read as new.
+- Upper edges: short 1px `light` scratch (2–3px) on exposed edges. That's the "scraped metal".
+- Base of pieces (cloak hem, soles, armor skirt): 1–2px of `dither` in the `shadow` tone — ground dirt.
+- Metal: HARD separation per face — top `light`/`metal`, side `base`, bottom `dark`. No gradient; 1px transition at most.
+- Cloth: `vstripes` 2 tones (vertical folds) + `ao` at the bottom. Chain/ring: `dots(step=2)` in a column.
 
-## 4. Detalhes (kit do grimdark)
+## 4. Details (grimdark kit)
 
-| efeito | receita |
-|--------|---------|
-| rebite | 1 pixel `metal` claro + 1px `outline` abaixo |
-| camadas de placa | linha `outline` 1px entre placas + `light` no topo de cada |
-| runa | 2–4px do `accent` em forma de risco (L, T, X) — só 1 por peça |
-| olho sob elmo | faixa `outline` 1px + 1 pixel `accent`/`glow` |
-| emblema | bloco 2×2 do acento com 1px outline; sem simetria perfeita |
+| effect | recipe |
+|---|---|
+| rivet | 1 `metal` light pixel + 1px `outline` below |
+| plate layers | 1px `outline` line between plates + `light` on top of each |
+| rune | 2–4px of `accent` as a scratch (L, T, X) — only 1 per piece |
+| eye under helmet | 1px `outline` band + 1 `accent`/`glow` pixel |
+| emblem | 2×2 `accent` block with 1px outline; not perfectly symmetric |
 
-## 5. Cara / expressão
+## 5. Face / expression
 
-- Elmo fechado é o padrão (mais sombrio, menos trabalho). Se tiver rosto: pele pálida dessaturada, olhos = 1px `glow` frio, sem boca (ou linha reta de 1px).
-- Cicatriz: `line_v` de 2–3px `dark` com falha no meio.
-- Nunca blush, nunca faísca no olho.
+- Closed helmet is the default (darker, less work). If there's a face: pale desaturated skin, eyes = 1px cold `glow`, no mouth (or 1px straight line).
+- Scar: 2–3px `dark` `line_v` with a gap in the middle.
+- Never blush, never eye spark.
 
-## 6. Orçamento e QC
+## 6. Budget and QC
 
-- Até 3000 tris; forma > detalhe. Se o preview virar "borrão cinza", o contraste entre blocos está baixo — suba o `metal`/`accent`.
-- QC: valor médio ESCURO é o objetivo, mas todo bloco precisa de 2 valores distintos (200–300% de diferença de luminância entre topo e fundo).
-- `bbcheck --style`: preto/branco puro = erro; `#14161c`/`#e8e4dc` são os extremos seguros.
+- Up to 3000 tris; form > detail. If the preview turns into "gray blur", contrast between blocks is low — raise `metal`/`accent`.
+- QC: DARK average value is the goal, but every block needs 2 distinct values (200–300% luminance difference between top and bottom).
+- `bbcheck --style`: pure black/white = error; `#14161c`/`#e8e4dc` are the safe extremes.
 
-## 7. Não faça
+## 7. Don'ts
 
-- Dessaturar tudo POR IGUAL: sem o acento quente, o modelo vira sujeira ilegível.
-- Contorno cute: aqui o outline é a "fumaça" — escuro mas NÃO preto, e pode ter falhas.
-- Detalhe fino em área escura: em 64px não sobrevive. Massa e contraste, só.
+- Desaturating everything EQUALLY: without the warm accent, the model reads as illegible dirt.
+- Cute outline: here the outline is "smoke" — dark but NOT black, and gaps are welcome.
+- Fine detail in dark areas: doesn't survive at 64px. Mass and contrast only.
 
-Outros estilos da skill: `style-cute-cartoon.md`, `style-horror.md`, `style-realistic.md` — mesmo pipeline, outra silhueta/pintura.
+Other styles in the skill: `style-cute-cartoon.md`, `style-horror.md`, `style-realistic.md` — same pipeline, different silhouette/painting.

@@ -1,23 +1,23 @@
 #!/usr/bin/env python3
 """
-bburl.py — gera link do web app do Blockbench (web.blockbench.net) que abre
-o modelo sem download.
+bburl.py — builds the Blockbench web app link (web.blockbench.net) that opens
+the model without downloading.
 
-Formato (verificado no fonte do web-link.ts do blockbench-mcp-plugin):
-    https://web.blockbench.net/#loadtype=json&loadname=NOME&loaddata=DADOS
+Format (verified against the web-link.ts source of the blockbench-mcp-plugin):
+    https://web.blockbench.net/#loadtype=json&loadname=NAME&loaddata=DATA
 
-O app decodifica o hash com UM decodeURIComponent, quebra em '&' e faz
-JSON.parse no loaddata. Por isso:
-- o JSON vai compacto (sem espaços)
-- todo '&' é escapado como \\u0026 (escape JSON válido) ANTES do percent-encode
-- o percent-encode usa o mesmo conjunto do encodeURIComponent
+The app decodes the hash with a SINGLE decodeURIComponent, splits on '&' and
+does JSON.parse on loaddata. Therefore:
+- JSON is compact (no spaces)
+- every '&' is escaped as \\u0026 (valid JSON escape) BEFORE percent-encoding
+- percent-encoding uses the same set as encodeURIComponent
 
-Uso:
+Usage:
     from bburl import build_url, verify
-    url = build_url(model)          # bbmodel.Model | dict | caminho .bbmodel
+    url = build_url(model)          # bbmodel.Model | dict | path to .bbmodel
     assert verify(url)              # roundtrip: decode -> parse -> dict
 
-    python3 bburl.py modelo.bbmodel [--out link.txt] [--verify-only URL]
+    python3 bburl.py model.bbmodel [--out link.txt] [--verify-only URL]
 """
 
 import json
@@ -31,14 +31,14 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 BASE = "https://web.blockbench.net/#"
 SAFE_NAME = re.compile(r"[^A-Za-z0-9._ -]+")
 MAX_HASH_WARN = 1_500_000
-# O web app decide o codec pela EXTENSÃO do loadname (js/io/io.js: pathToExtension
-# + load_filter.extensions). Sem ".bbmodel" o nenhum casa e o app mostra
+# The web app picks the codec by the EXTENSION of loadname (js/io/io.js: pathToExtension
+# + load_filter.extensions). Without ".bbmodel" no codec matches and the app shows
 # "invalid format" (unsupportedFileFormatMessage).
 PROJECT_EXT = ".bbmodel"
 
 
 def encode_loaddata(data):
-    """data: dict ou string JSON -> valor percent-encodeado seguro p/ o hash."""
+    """data: dict or JSON string -> percent-encoded value safe for the hash."""
     if not isinstance(data, str):
         data = json.dumps(data, separators=(",", ":"), ensure_ascii=True)
     data = data.replace("&", "\\u0026")
@@ -46,7 +46,7 @@ def encode_loaddata(data):
 
 
 def build_url(model, name=None, base=BASE, ext=PROJECT_EXT):
-    """URL do web app. `name` vira o loadname e DEVE terminar em .bbmodel."""
+    """Web app URL. `name` becomes the loadname and MUST end in .bbmodel."""
     if hasattr(model, "to_dict"):
         name = name or getattr(model, "name", "model")
         data = model.to_dict()
@@ -57,20 +57,20 @@ def build_url(model, name=None, base=BASE, ext=PROJECT_EXT):
             data = json.load(fh)
         name = name or os.path.splitext(os.path.basename(model))[0]
     else:
-        raise TypeError("model deve ser Model, dict ou caminho de .bbmodel")
+        raise TypeError("model must be a Model, dict or path to a .bbmodel")
     safe = SAFE_NAME.sub("_", name or "model") or "model"
     if ext and not safe.lower().endswith(ext):
         safe = os.path.splitext(safe)[0] + ext
     enc = encode_loaddata(data)
     url = f"{base}loadtype=json&loadname={quote(safe, safe='')}&loaddata={enc}"
     if len(url) > MAX_HASH_WARN:
-        print(f"aviso: URL com {len(url)} chars — alguns navegadores/apps cortam links longos",
+        print(f"warning: URL with {len(url)} chars — some browsers/apps truncate long links",
               file=sys.stderr)
     return url
 
 
 def verify(url):
-    r"""Simula EXATAMENTE o parser do web app (js/web.ts).
+    r"""Simulates EXACTLY the web app parser (js/web.ts).
 
     query_string = decodeURIComponent(hash.substring(1)); split('&');
     [key, value] = string.split(/=\s*(.+)/)
@@ -85,38 +85,38 @@ def verify(url):
     assert fields.get("loadtype") == "json", f"loadtype={fields.get('loadtype')!r}"
     loadname = fields.get("loadname") or ""
     assert loadname.lower().endswith(PROJECT_EXT), (
-        f"loadname {loadname!r} sem {PROJECT_EXT} — o web app rejeita com 'invalid format'")
+        f"loadname {loadname!r} without {PROJECT_EXT} — the web app rejects with 'invalid format'")
     data = json.loads(fields["loaddata"])
     return data
 
 
 def check_url(url_or_path):
-    """Retorna o dict decodificado + checagens básicas de integridade."""
+    """Returns the decoded dict + basic integrity checks."""
     if os.path.exists(url_or_path):
         with open(url_or_path, encoding="utf-8") as fh:
             url = fh.read().strip()
     else:
         url = url_or_path
     data = verify(url)
-    assert "meta" in data and "elements" in data, "JSON não parece um .bbmodel"
+    assert "meta" in data and "elements" in data, "JSON does not look like a .bbmodel"
     return data
 
 
 def _demo():
     import bbmodel as bm
     import bbtex
-    m = bm.Model("cogumelo & cia", tex_w=32, tex_h=32, density=1)
-    g = m.group("raiz")
-    m.cube("chapeu", [0, 4, 0], [12, 8, 12], group=g)
+    m = bm.Model("mushroom & co", tex_w=32, tex_h=32, density=1)
+    g = m.group("root")
+    m.cube("hat", [0, 4, 0], [12, 8, 12], group=g)
     png = bbtex.blank_png(32, 32, color=(220, 70, 90, 255))
     m.attach_texture_bytes(png)
     url = build_url(m)
     data = verify(url)
-    assert data == m.to_dict(), "roundtrip do link falhou"
-    assert "&loaddata=" in url and data["name"] == "cogumelo & cia"
-    assert "&loadname=cogumelo" in url and ".bbmodel" in url
+    assert data == m.to_dict(), "link roundtrip failed"
+    assert "&loaddata=" in url and data["name"] == "mushroom & co"
+    assert "&loadname=mushroom" in url and ".bbmodel" in url
     assert " " not in url.split("#")[1].split("&loadname=")[1].split("&")[0]
-    print(f"bburl smoke OK — {len(url)} chars, loadname e roundtrip ok")
+    print(f"bburl smoke OK — {len(url)} chars, loadname and roundtrip ok")
     print(url[:110] + "...")
 
 
@@ -129,7 +129,7 @@ def main(argv):
         return 0
     if "--verify-only" in argv:
         data = check_url(argv[argv.index("--verify-only") + 1])
-        print(f"link ok — modelo {data.get('name')!r}, {len(data['elements'])} elementos")
+        print(f"link ok — model {data.get('name')!r}, {len(data['elements'])} elements")
         return 0
     path = argv[0]
     url = build_url(path)
@@ -140,7 +140,7 @@ def main(argv):
         out = argv[argv.index("--out") + 1]
         with open(out, "w", encoding="utf-8") as fh:
             fh.write(url)
-        print(f"link salvo em {out} ({len(url)} chars)")
+        print(f"link saved to {out} ({len(url)} chars)")
     else:
         print(url)
     return 0

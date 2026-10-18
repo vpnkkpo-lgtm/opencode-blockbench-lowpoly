@@ -1,20 +1,20 @@
 #!/usr/bin/env python3
 """
-bbglb.py — exportador GLB em Python puro (sem three.js, sem node).
+bbglb.py — pure-Python GLB exporter (no three.js, no node).
 
-Recebe o dict de bbmodel.Model.bake() e escreve um .glb válido (glTF 2.0):
-- 1 mesh, triangulado, não-indexado, normais flat por triângulo
-- UV direto: glTF usa origem top-left -> uv = (u_px/tex_w, v_px/tex_h), sem 1-v
-- material PBR: metallic 0, roughness 1; alphaMode MASK se houver alpha < 255
-- sampler com NEAREST (9728/9986) para preservar o look pixel
-- textura PNG embutida em bufferView
+Takes the dict from bbmodel.Model.bake() and writes a valid .glb (glTF 2.0):
+- 1 mesh, triangulated, non-indexed, flat normal per triangle
+- Direct UV: glTF uses top-left origin -> uv = (u_px/tex_w, v_px/tex_h), no 1-v
+- PBR material: metallic 0, roughness 1; alphaMode MASK if any alpha < 255
+- sampler with NEAREST (9728/9986) to preserve the pixel look
+- embedded PNG texture in a bufferView
 
-Uso:
+Usage:
     from bbglb import export_glb
-    export_glb(model, "saida.glb")     # model = bbmodel.Model
-    export_glb(model.bake(), "saida.glb")
+    export_glb(model, "output.glb")     # model = bbmodel.Model
+    export_glb(model.bake(), "output.glb")
 
-    python3 bbglb.py --demo            # build + export + valida roundtrip
+    python3 bbglb.py --demo            # build + export + validates roundtrip
 """
 
 import json
@@ -48,15 +48,15 @@ def _normal(p0, p1, p2):
 
 
 def build_glb(baked, name="model", generator="blockbench-lowpoly (pure python)"):
-    """baked: dict com tris/tex_w/tex_h/png (saída de bbmodel.Model.bake())."""
+    """baked: dict with tris/tex_w/tex_h/png (output of bbmodel.Model.bake())."""
     tris = baked["tris"]
     if not tris:
-        raise ValueError("modelo sem triângulos para exportar")
+        raise ValueError("model has no triangles to export")
     tex_w = baked.get("tex_w") or 16
     tex_h = baked.get("tex_h") or 16
     png = baked.get("png")
 
-    # vértices únicos (pos, normal, uv) com índice
+    # unique vertices (pos, normal, uv) with index
     unique = {}
     indices = []
     positions = bytearray()
@@ -178,16 +178,16 @@ def _min_alpha(png):
 
 
 def parse_glb(data):
-    """Lê um GLB de volta (para testes): retorna {'json':..., 'bin': bytes}."""
+    """Read a GLB back (for tests): returns {'json':..., 'bin': bytes}."""
     if len(data) < 12:
-        raise ValueError("GLB curto demais")
+        raise ValueError("GLB too short")
     magic, version, total = struct.unpack("<III", data[:12])
     if magic != GLB_MAGIC:
-        raise ValueError("magic inválido")
+        raise ValueError("invalid magic")
     if version != 2:
-        raise ValueError(f"versão glTF {version} != 2")
+        raise ValueError(f"glTF version {version} != 2")
     if total != len(data):
-        raise ValueError(f"length do header ({total}) != bytes reais ({len(data)})")
+        raise ValueError(f"header length ({total}) != actual bytes ({len(data)})")
     pos = 12
     gltf = None
     binchunk = b""
@@ -200,12 +200,12 @@ def parse_glb(data):
         elif typ == CHUNK_BIN:
             binchunk = body
     if gltf is None:
-        raise ValueError("sem chunk JSON")
+        raise ValueError("no JSON chunk")
     return {"json": gltf, "bin": binchunk}
 
 
 def check_glb(data, verbose=False):
-    """Sanidade estrutural de um GLB. Retorna (ok, [problemas])."""
+    """Structural sanity check of a GLB. Returns (ok, [problems])."""
     problems = []
 
     def bad(msg):
@@ -220,7 +220,7 @@ def check_glb(data, verbose=False):
         bad("asset.version != 2.0")
     prims = g.get("meshes", [{}])[0].get("primitives", [])
     if not prims:
-        bad("sem primitives")
+        bad("no primitives")
         return False, problems
     prim = prims[0]
     if prim.get("mode", 4) != 4:
@@ -232,27 +232,27 @@ def check_glb(data, verbose=False):
         n_comp = {"VEC3": 3, "VEC2": 2, "SCALAR": 1}[acc["type"]]
         expect = acc["count"] * comp_size * n_comp
         if bv["byteLength"] < expect:
-            bad(f"{attr}: bufferView curto ({bv['byteLength']} < {expect})")
+            bad(f"{attr}: bufferView too short ({bv['byteLength']} < {expect})")
         if attr == "POSITION" and ("min" not in acc or "max" not in acc):
-            bad("POSITION sem min/max")
+            bad("POSITION without min/max")
         if attr == "TEXCOORD_0":
             off = bv.get("byteOffset", 0)
             for i in range(acc["count"]):
                 u, v = struct.unpack_from("<ff", binchunk, off + i * 8)
                 if not (-0.001 <= u <= 1.001 and -0.001 <= v <= 1.001):
-                    bad(f"UV[{i}] fora de [0,1]: {u:.3f},{v:.3f}")
+                    bad(f"UV[{i}] out of [0,1]: {u:.3f},{v:.3f}")
                     break
     if "images" in g:
         img_bv = g["bufferViews"][g["images"][0]["bufferView"]]
         off = img_bv.get("byteOffset", 0)
         png = binchunk[off:off + img_bv["byteLength"]]
         if not png.startswith(b"\x89PNG"):
-            bad("imagem embutida não é PNG")
+            bad("embedded image is not PNG")
         want_idx = g["materials"][0].get("pbrMetallicRoughness", {}).get("baseColorTexture", {}).get("index")
         if want_idx is None:
-            bad("imagem presente mas material sem baseColorTexture")
+            bad("image present but material has no baseColorTexture")
     if verbose:
-        print(f"GLB ok: {len(problems)} problema(s), {len(data)} bytes")
+        print(f"GLB ok: {len(problems)} problem(s), {len(data)} bytes")
     return not problems, problems
 
 
@@ -271,10 +271,10 @@ def export_glb(model_or_baked, path, name=None):
 def _demo():
     import bbmodel as bm
     import bbtex
-    m = bm.Model("demo_glb", tex_w=64, tex_h=64, density=1)
-    g = m.group("raiz")
+    m = bm.Model("glb_demo", tex_w=64, tex_h=64, density=1)
+    g = m.group("root")
     m.cube("base", [0, 0, 0], [16, 4, 16], group=g)
-    m.cube("topo", [2, 4, 2], [14, 12, 14], group=g)
+    m.cube("top", [2, 4, 2], [14, 12, 14], group=g)
     png = bbtex.blank_png(64, 64, color=(230, 80, 100, 255))
     m.attach_texture_bytes(png)
     import tempfile
@@ -286,7 +286,7 @@ def _demo():
     baked = m.bake()
     parsed = parse_glb(data)
     acc = parsed["json"]["accessors"][0]
-    assert acc["count"] > 0, "count de POSITION errado"
+    assert acc["count"] > 0, "POSITION count wrong"
     off = parsed["json"]["bufferViews"][0]["byteOffset"]
     x, y, z = struct.unpack_from("<fff", parsed["bin"], off)
     assert abs(y - min(acc["min"][1], y)) < 1e-6
@@ -304,7 +304,7 @@ if __name__ == "__main__":
         model = bm.Model.load(in_path)
         out = out_path or in_path.replace(".bbmodel", ".glb")
         path, size = export_glb(model, out)
-        print(f"GLB exportado: {path} ({size} bytes)")
+        print(f"GLB exported: {path} ({size} bytes)")
     elif "--demo" in sys.argv or len(sys.argv) == 1:
         _demo()
     else:

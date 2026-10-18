@@ -1,47 +1,159 @@
 {
-  "_doc": "Paletas SOMBRIAS (dark fantasy / grimdark). Roles: outline (fumaça/sombra), base, light, dark (painel 3 tons), accent (brasa, runa, sangue seco), metal (aço/bronze/osso/ferrugem — 2º material), shadow (sombra projetada), background (fundo de preview). Regra do estilo: dessaturado + ALTO contraste + 1 acento quente; nunca preto puro (use #14161c). Escolha 1 tom por role por peça; alvo 8-20 cores PINTADAS. Use com bbtex.load_palette(); guia: references/style-dark.md.",
+  "_doc": "DARK palettes (dark fantasy / grimdark). Roles: outline (smoke/shadow), base, light, dark (2-tone panel), accent (warm accent), blush (unused/scar), shadow (projected), background. NEVER pure black/white.",
   "cavaleiro": {
-    "label": "Cavaleiro sombrio (aço escuro + brasa)",
-    "outline": ["#14161c", "#181a21", "#101218"],
-    "base": ["#3e4450", "#393f4b", "#434955"],
-    "light": ["#5c6474", "#565e6e", "#626a7a"],
-    "dark": ["#272c36", "#232831", "#2b303b"],
-    "accent": ["#8a3a2e", "#823428", "#924034"],
-    "metal": ["#8a92a4", "#838b9d", "#9199ab"],
-    "shadow": ["#0f1116", "#0d0f14", "#111318"],
+    "label": "Dark knight (dark steel + ember)",
+    "outline": [
+      "#14161c",
+      "#181a21",
+      "#101218"
+    ],
+    "base": [
+      "#3e4450",
+      "#393f4b",
+      "#434955"
+    ],
+    "light": [
+      "#5c6474",
+      "#565e6e",
+      "#626a7a"
+    ],
+    "dark": [
+      "#272c36",
+      "#232831",
+      "#2b303b"
+    ],
+    "accent": [
+      "#8a3a2e",
+      "#823428",
+      "#924034"
+    ],
+    "metal": [
+      "#8a92a4",
+      "#838b9d",
+      "#9199ab"
+    ],
+    "shadow": [
+      "#0f1116",
+      "#0d0f14",
+      "#111318"
+    ],
     "background": "#0b0d11"
   },
   "necromante": {
-    "label": "Necromante (manto roxo + runas)",
-    "outline": ["#17101f", "#1b1324", "#130d1a"],
-    "base": ["#3a2c4e", "#352748", "#3f3154"],
-    "light": ["#57436f", "#513d69", "#5d4975"],
-    "dark": ["#261b34", "#22172f", "#2a1f39"],
-    "accent": ["#4ec8a0", "#47c099", "#55d0a7"],
-    "metal": ["#cfc3a0", "#c8bc99", "#d6caa7"],
-    "shadow": ["#120c18", "#100a15", "#140e1b"],
+    "label": "Necromancer (purple cloak + runes)",
+    "outline": [
+      "#17101f",
+      "#1b1324",
+      "#130d1a"
+    ],
+    "base": [
+      "#3a2c4e",
+      "#352748",
+      "#3f3154"
+    ],
+    "light": [
+      "#57436f",
+      "#513d69",
+      "#5d4975"
+    ],
+    "dark": [
+      "#261b34",
+      "#22172f",
+      "#2a1f39"
+    ],
+    "accent": [
+      "#4ec8a0",
+      "#47c099",
+      "#55d0a7"
+    ],
+    "metal": [
+      "#cfc3a0",
+      "#c8bc99",
+      "#d6caa7"
+    ],
+    "shadow": [
+      "#120c18",
+      "#100a15",
+      "#140e1b"
+    ],
     "background": "#0a070e"
   },
   "forja": {
-    "label": "Forja (bronze sujo + brasa)",
-    "outline": ["#23150c", "#291a0f", "#1d1008"],
-    "base": ["#5a3a24", "#543521", "#603f27"],
-    "light": ["#7a5232", "#744c2d", "#805836"],
-    "dark": ["#3d2717", "#382314", "#422b1a"],
-    "accent": ["#d87a2a", "#d07326", "#e0812e"],
-    "metal": ["#a87838", "#a17233", "#af7e3d"],
-    "shadow": ["#170d07", "#140c06", "#1a0f08"],
+    "label": "Forge (dirty bronze + ember)",
+    "outline": [
+      "#23150c",
+      "#291a0f",
+      "#1d1008"
+    ],
+    "base": [
+      "#5a3a24",
+      "#543521",
+      "#603f27"
+    ],
+    "light": [
+      "#7a5232",
+      "#744c2d",
+      "#805836"
+    ],
+    "dark": [
+      "#3d2717",
+      "#382314",
+      "#422b1a"
+    ],
+    "accent": [
+      "#d87a2a",
+      "#d07326",
+      "#e0812e"
+    ],
+    "metal": [
+      "#a87838",
+      "#a17233",
+      "#af7e3d"
+    ],
+    "shadow": [
+      "#170d07",
+      "#140c06",
+      "#1a0f08"
+    ],
     "background": "#120a05"
   },
   "pantano": {
-    "label": "Pântano (limo escuro + ferro enferrujado)",
-    "outline": ["#1a2015", "#1f261a", "#151a11"],
-    "base": ["#4a5a38", "#455434", "#4f603c"],
-    "light": ["#66784c", "#617247", "#6b7e51"],
-    "dark": ["#333f26", "#2f3a22", "#37432a"],
-    "accent": ["#8fae4a", "#88a643", "#96b651"],
-    "metal": ["#6b4a35", "#654431", "#715039"],
-    "shadow": ["#202b18", "#1d2715", "#232f1b"],
+    "label": "Swamp (dark slime + rusted iron)",
+    "outline": [
+      "#1a2015",
+      "#1f261a",
+      "#151a11"
+    ],
+    "base": [
+      "#4a5a38",
+      "#455434",
+      "#4f603c"
+    ],
+    "light": [
+      "#66784c",
+      "#617247",
+      "#6b7e51"
+    ],
+    "dark": [
+      "#333f26",
+      "#2f3a22",
+      "#37432a"
+    ],
+    "accent": [
+      "#8fae4a",
+      "#88a643",
+      "#96b651"
+    ],
+    "metal": [
+      "#6b4a35",
+      "#654431",
+      "#715039"
+    ],
+    "shadow": [
+      "#202b18",
+      "#1d2715",
+      "#232f1b"
+    ],
     "background": "#0e130a"
   }
 }

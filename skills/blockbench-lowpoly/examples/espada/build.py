@@ -19,7 +19,7 @@ png = c.to_png()
 m.attach_texture_bytes(png)
 
 rep = bbcheck.check(m.to_dict(), style=True, detail=True, tipo="prop")
-print("espada:", len(rep["errors"]), "erros", len(rep["warnings"]), "avisos")
+print("sword:", len(rep["errors"]), "errors", len(rep["warnings"]), "warnings")
 bbrender.render_sheet(m, "preview_sheet.png", size=256)
 m.save("espada.bbmodel")
 with open("espada.glb","wb") as f: f.write(bbglb.build_glb(m.bake(), "espada"))

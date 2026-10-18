@@ -1,26 +1,26 @@
 #!/usr/bin/env python3
 """
-bbmodel.py — biblioteca para montar modelos Blockbench (.bbmodel 5.0) em Python puro.
+bbmodel.py — library to build Blockbench models (.bbmodel 5.0) in pure Python.
 
-Convenções (todas verificadas no código-fonte do Blockbench):
-- Coordenadas Y-up; 16 unidades = 1 bloco Minecraft. Autore com os pés em y=0.
-- UV em PIXELS, origem no canto superior-esquerdo, v cresce para BAIXO.
-- face.uv = [u1, v1, u2, v2]; o k-ésimo vértice da face (ordem FACE_VERTICES)
-  recebe o k-ésimo canto da região UV na ordem [TL, TR, BR, BL].
-- face.texture é o ÍNDICE inteiro da textura (null = face desabilitada).
-- rotation em graus, euler ordem 'ZYX' (R = Rz @ Ry @ Rx), extrínseco.
-- Saída em meta.format_version "5.0": groups achatados + outliner de referências
-  (nó de grupo = {uuid, isOpen, children}; elemento = string de uuid).
-- Inflate expande o cubo: de = from - inflate, para = to + inflate.
+Conventions (all verified against the Blockbench source code):
+- Y-up coordinates; 16 units = 1 Minecraft block. Author with feet at y=0.
+- UV in PIXELS, origin at top-left corner, v grows DOWNWARD.
+- face.uv = [u1, v1, u2, v2]; the k-th vertex of the face (FACE_VERTICES order)
+  receives the k-th corner of the UV region in the order [TL, TR, BR, BL].
+- face.texture is the INTEGER index of the texture (null = disabled face).
+- rotation in degrees, euler order 'ZYX' (R = Rz @ Ry @ Rx), extrinsic.
+- Output in meta.format_version "5.0": flattened groups + outliner of references
+  (group node = {uuid, isOpen, children}; element = uuid string).
+- Inflate expands the cube: from = from - inflate, to = to + inflate.
 
-Uso típico:
+Typical usage:
     from bbmodel import Model
-    m = Model("cogumelo", tex_w=64, tex_h=64, density=2)
-    g = m.group("corpo")
+    m = Model("mushroom", tex_w=64, tex_h=64, density=2)
+    g = m.group("body")
     cap = m.cube("cap", [4, 8, 4], [12, 12, 12], group=g, origin=[8, 8, 8])
-    m.cube("cap_dir", [4, 8, 4], [12, 12, 12], group=g).mirror(0, 8)
+    m.cube("cap_r", [4, 8, 4], [12, 12, 12], group=g).mirror(0, 8)
     m.attach_texture_bytes(png_bytes)
-    m.save("cogumelo.bbmodel")
+    m.save("mushroom.bbmodel")
     print(m.uv_regions)   # {"cap": {"north": [u1,v1,u2,v2], ...}, ...}
 """
 
@@ -34,7 +34,7 @@ import uuid as _uuid
 FORMAT_VERSION = "5.0"
 DIRECTIONS = ("north", "east", "south", "west", "up", "down")
 
-# Ordem dos vértices por face — CubeFace.getVertexIndices() do Blockbench.
+# Per-face vertex order — CubeFace.getVertexIndices() from Blockbench.
 FACE_VERTICES = {
     "north": (1, 4, 6, 3),
     "east": (0, 1, 3, 2),
@@ -49,37 +49,37 @@ def guid():
     return str(_uuid.uuid4())
 
 
-# Namespace fixo para uuid determinístico: mesmos nomes → mesmos uuids, em qualquer
-# máquina e a cada rebuild. Isso torna o build byte-idêntico (regra de ouro 9) e,
-# principalmente, mantém válidos as chaves de animação (que referenciam o uuid do
-# osso) quando o script roda de novo.
+# Fixed namespace for deterministic uuid: same names -> same uuids, on any
+# machine and on every rebuild. This makes the build byte-identical (golden rule 9)
+# and, most importantly, keeps animation keys (which reference the bone uuid)
+# valid when the script runs again.
 DET_NAMESPACE = _uuid.UUID("1b0c8f2e-3a5d-4c7b-9e11-6d2f8a4b7c30")
 
 
 def det_uuid(kind, name):
-    """UUID estável derivado do tipo+nome do nó (uuid5)."""
+    """Stable uuid derived from node type+name (uuid5)."""
     return str(_uuid.uuid5(DET_NAMESPACE, f"{kind}:{name}"))
 
 
 def _num(x):
-    """Limpa número: int quando integral, senão arredonda para 4 casas."""
+    """Clean number: int when integral, otherwise rounded to 4 decimals."""
     x = float(x)
     if x == int(x):
         return int(x)
     return round(x, 4)
 
 
-def _v3(v, label="vetor"):
+def _v3(v, label="vector"):
     if not isinstance(v, (list, tuple)) or len(v) != 3:
-        raise ValueError(f"{label}: esperado [x, y, z], veio {v!r}")
+        raise ValueError(f"{label}: expected [x, y, z], got {v!r}")
     return [_num(v[0]), _num(v[1]), _num(v[2])]
 
 
 def face_uv_corners(uv, rotation=0):
-    """Cantos UV na ordem dos vértices [TL, TR, BR, BL], aplicando face rotation.
+    """UV corners in vertex order [TL, TR, BR, BL], applying face rotation.
 
-    Mesma lógica do exportador OBJ do Blockbench: cada 90° gira a lista
-    movendo o último canto para a frente.
+    Same logic as the Blockbench OBJ exporter: each 90° rotates the list
+    moving the last corner to the front.
     """
     u1, v1, u2, v2 = float(uv[0]), float(uv[1]), float(uv[2]), float(uv[3])
     corners = [(u1, v1), (u2, v1), (u2, v2), (u1, v2)]
@@ -89,7 +89,7 @@ def face_uv_corners(uv, rotation=0):
 
 
 def cube_vertex_table(frm, to):
-    """8 vértices locais na ordem canônica do Blockbench (getGlobalVertexPositions)."""
+    """8 local vertices in Blockbench's canonical order (getGlobalVertexPositions)."""
     return [
         (to[0], to[1], to[2]),
         (to[0], to[1], frm[2]),
@@ -103,7 +103,7 @@ def cube_vertex_table(frm, to):
 
 
 def euler_matrix_zyx(rx_deg, ry_deg, rz_deg):
-    """Matriz 3x3 R = Rz @ Ry @ Rx (ordem euler 'ZYX' do Blockbench)."""
+    """3x3 matrix R = Rz @ Ry @ Rx (Blockbench euler order 'ZYX')."""
     rx, ry, rz = map(math.radians, (rx_deg, ry_deg, rz_deg))
     cx, sx = math.cos(rx), math.sin(rx)
     cy, sy = math.cos(ry), math.sin(ry)
@@ -130,7 +130,7 @@ def _m3_apply(m, v):
 
 
 def _rotate_around(rotation_deg, origin, v):
-    """v rotacionado em torno de origin pela euler 'ZYX' de rotation_deg."""
+    """v rotated around origin by the 'ZYX' euler rotation_deg."""
     rx, ry, rz = rotation_deg
     if not (rx or ry or rz):
         return tuple(v)
@@ -142,7 +142,7 @@ def _rotate_around(rotation_deg, origin, v):
 
 
 # ---------------------------------------------------------------------------
-# Alocador de UV (shelf packing com gap entre regiões)
+# UV allocator (shelf packing with gap between regions)
 # ---------------------------------------------------------------------------
 
 class UVAllocator:
@@ -163,8 +163,8 @@ class UVAllocator:
         rh = max(1, int(round(rh)))
         if rw + 2 * self.margin > self.w or rh + 2 * self.margin > self.h:
             raise ValueError(
-                f"região '{key}' ({rw}x{rh}px) não cabe na textura {self.w}x{self.h} "
-                f"(margem {self.margin}px). Aumente tex_w/tex_h ou reduza a densidade."
+                f"region '{key}' ({rw}x{rh}px) does not fit in texture {self.w}x{self.h} "
+                f"(margin {self.margin}px). Increase tex_w/tex_h or reduce density."
             )
         ew = rw + self.gap
         eh = rh + self.gap
@@ -188,8 +188,8 @@ class UVAllocator:
                 best = (maxy, cx)
         if best is None:
             raise ValueError(
-                f"textura {self.w}x{self.h} cheia ao alocar '{key}' ({rw}x{rh}px). "
-                f"Aumente tex_w/tex_h, reduza density, ou divida em vários modelos."
+                f"texture {self.w}x{self.h} full while allocating '{key}' ({rw}x{rh}px). "
+                f"Increase tex_w/tex_h, reduce density, or split into several models."
             )
         maxy, cx = best
         y = maxy
@@ -222,7 +222,7 @@ class UVAllocator:
 
 
 # ---------------------------------------------------------------------------
-# Nós do modelo
+# Model nodes
 # ---------------------------------------------------------------------------
 
 class FaceState:
@@ -288,13 +288,13 @@ class Cube(_Node):
         return [(self.frm[i] + self.to[i]) / 2 for i in range(3)]
 
     def mirror(self, axis, center):
-        """Espelha o cubo no plano axis=center, replicando flip() do Blockbench.
+        """Mirrors the cube on the plane axis=center, replicating Blockbench's flip().
 
-        axis: 0=X, 1=Y, 2=Z. O centro é a coordenada do plano (ex.: 8 = centro da grade).
-        Face data é trocada entre os pares e as UVs são espelhadas.
+        axis: 0=X, 1=Y, 2=Z. center is the plane coordinate (e.g., 8 = grid center).
+        Face data is swapped between pairs and UVs are mirrored.
         """
         if axis not in (0, 1, 2):
-            raise ValueError("axis deve ser 0 (X), 1 (Y) ou 2 (Z)")
+            raise ValueError("axis must be 0 (X), 1 (Y) or 2 (Z)")
         c = float(center)
         r = self.rotation
         r[(axis + 1) % 3] = _num(r[(axis + 1) % 3] * -1)
@@ -314,13 +314,13 @@ class Cube(_Node):
         def flip_v(fs):
             fs.uv = [fs.uv[0], fs.uv[3], fs.uv[2], fs.uv[1]]
 
-        def fx(fs):  # espelhamento em X da face
+        def fx(fs):  # mirror of the face on X
             if fs.rotation in (90, 270):
                 flip_v(fs)
             else:
                 flip_u(fs)
 
-        def fy(fs):  # espelhamento em Y da face
+        def fy(fs):  # mirror of the face on Y
             if fs.rotation in (90, 270):
                 flip_u(fs)
             else:
@@ -348,8 +348,8 @@ class Cube(_Node):
 class Mesh(_Node):
     def __init__(self, name, vertices, faces, origin, rotation, color=None):
         super().__init__(name, "mesh")
-        self.vertices = [tuple(float(c) for c in v) for v in vertices]  # autorais (absolutos)
-        self.faces = []  # lista de dicts {"vertices": (i,...), "uv": [(u,v), ...] | None}
+        self.vertices = [tuple(float(c) for c in v) for v in vertices]  # authored (absolute)
+        self.faces = []  # list of dicts {"vertices": (i,...), "uv": [(u,v), ...] | None}
         for f in faces:
             if isinstance(f, dict):
                 vis = tuple(int(i) for i in f["vertices"])
@@ -358,10 +358,10 @@ class Mesh(_Node):
                 vis = tuple(int(i) for i in f)
                 uvs = None
             if len(vis) < 3:
-                raise ValueError(f"mesh({name}): face com menos de 3 vértices: {vis}")
+                raise ValueError(f"mesh({name}): face with fewer than 3 vertices: {vis}")
             for i in vis:
                 if not (0 <= i < len(self.vertices)):
-                    raise ValueError(f"mesh({name}): face referencia vértice inexistente {i}")
+                    raise ValueError(f"mesh({name}): face references non-existent vertex {i}")
             self.faces.append({"vertices": vis, "uv": uvs})
         self.origin = _v3(origin, f"mesh({name}) origin")
         self.rotation = _v3(rotation or (0, 0, 0), f"mesh({name}) rotation")
@@ -369,7 +369,7 @@ class Mesh(_Node):
 
     def mirror(self, axis, center):
         if axis not in (0, 1, 2):
-            raise ValueError("axis deve ser 0 (X), 1 (Y) ou 2 (Z)")
+            raise ValueError("axis must be 0 (X), 1 (Y) or 2 (Z)")
         c = float(center)
         r = self.rotation
         r[(axis + 1) % 3] = _num(r[(axis + 1) % 3] * -1)
@@ -378,8 +378,8 @@ class Mesh(_Node):
             tuple((2 * c - v[axis]) if i == axis else v[i] for i in range(3))
             for v in self.vertices
         ]
-        # espelhamento inverte a orientação: reverter ordem dos vértices de cada face
-        # (e as UVs correspondentes) para manter normal apontando para fora.
+        # mirroring inverts orientation: reverse vertex order of each face
+        # (and the matching UVs) to keep the normal pointing outward.
         new_faces = []
         for f in self.faces:
             vis = tuple(reversed(f["vertices"]))
@@ -393,13 +393,13 @@ class Mesh(_Node):
 
 
 # ---------------------------------------------------------------------------
-# Modelo
+# Model
 # ---------------------------------------------------------------------------
 
 class Model:
     def __init__(self, name="model", tex_w=64, tex_h=64, density=2, gap=1, margin=1):
         if density <= 0:
-            raise ValueError("density deve ser > 0 (pixels por unidade)")
+            raise ValueError("density must be > 0 (pixels per unit)")
         self.name = name
         self.tex_w = int(tex_w)
         self.tex_h = int(tex_h)
@@ -412,13 +412,12 @@ class Model:
         self.texture_png = None
         self.texture_name = "texture.png"
         self.texture_uuid = det_uuid("texture", name)
-        self.textures = []  # lista de (png_bytes, name, uuid) - suporte multi-textura
+        self.textures = []  # list of (png_bytes, name, uuid) - multi-texture support
         self.animations = []
-        # uuid -> nome dos grupos, como vieram do arquivo (usado por preserve_animations)
+        # uuid -> group names, as they came from the file (used by preserve_animations)
         self.loaded_group_names = {}
 
-    # -- construção ---------------------------------------------------------
-
+    # -- construction -------------------------------------------------------
     def _resolve_group(self, group):
         if group is None:
             return None
@@ -428,8 +427,8 @@ class Model:
             for g in self.groups:
                 if g.name == group:
                     return g
-            raise ValueError(f"grupo {group!r} não existe (crie com m.group antes)")
-        raise TypeError("group deve ser Group, nome de grupo ou None")
+            raise ValueError(f"group {group!r} does not exist (create it with m.group first)")
+        raise TypeError("group must be a Group, group name or None")
 
     def _attach(self, node, group):
         g = self._resolve_group(group)
@@ -444,7 +443,7 @@ class Model:
             self.elements.append(node)
 
     def locator(self, name, origin=(0, 0, 0), parent=None, rotation=(0, 0, 0)):
-        """Cria um locator (grupo vazio usado como ponto de attach/efeito)."""
+        """Creates a locator (empty group used as an attach/effect point)."""
         g = self.group(name, origin=origin, rotation=rotation, parent=parent)
         g._locator = True
         return g
@@ -462,24 +461,24 @@ class Model:
 
     def cube(self, name, frm, to, group=None, origin=None, rotation=None,
              inflate=0.0, mirror_uv=False, faces=None, uv=None, color=None):
-        """Cria um cubo com UV automática (por face) ou explícita.
+        """Creates a cube with automatic UV (per face) or explicit UV.
 
-        faces: None = todas as 6; lista para habilitar subconjunto (ex.: ["north","up"]).
-        uv: None = auto-alocar por face; [u1,v1,u2,v2] = mesma região para todas;
-            dict {"north": [u1,v1,u2,v2], ...} = região por face.
-        origin: pivô; default = centro do cubo.
+        faces: None = all 6; list to enable a subset (e.g., ["north","up"]).
+        uv: None = auto-allocate per face; [u1,v1,u2,v2] = same region for all;
+            dict {"north": [u1,v1,u2,v2], ...} = region per face.
+        origin: pivot; default = cube center.
         """
         frm = _v3(frm, f"cube({name}) from")
         to = _v3(to, f"cube({name}) to")
         if name in {c.name for c in self.elements}:
-            raise ValueError(f"já existe elemento chamado {name!r} (nomes devem ser únicos)")
+            raise ValueError(f"an element named {name!r} already exists (names must be unique)")
         if origin is None:
             origin = [(frm[i] + to[i]) / 2 for i in range(3)]
         cube = Cube(name, frm, to, origin, rotation, inflate, mirror_uv, color)
         enabled = set(DIRECTIONS if faces is None else faces)
         for d in enabled:
             if d not in DIRECTIONS:
-                raise ValueError(f"face inválida {d!r}; use {DIRECTIONS}")
+                raise ValueError(f"invalid face {d!r}; use {DIRECTIONS}")
 
         dims = [abs(to[i] - frm[i]) for i in range(3)]
         face_units = {
@@ -498,9 +497,9 @@ class Model:
             if uv is None:
                 if self.alloc is None:
                     raise ValueError(
-                        f"cube({name!r}): modelo carregado de arquivo não tem alocador de UV. "
-                        "Passe uv=[u1,v1,u2,v2] (ou dict por face) explícito, ou chame "
-                        "reset_alloc() antes (cuidado: pode sobrepor UVs já existentes)."
+                        f"cube({name!r}): model loaded from file has no UV allocator. "
+                        "Pass uv=[u1,v1,u2,v2] (or a dict per face) explicitly, or call "
+                        "reset_alloc() first (careful: may overlap existing UVs)."
                     )
                 w_px = self._px(face_units[d][0])
                 h_px = self._px(face_units[d][1])
@@ -515,10 +514,10 @@ class Model:
 
     def mesh(self, name, vertices, faces, group=None, origin=None, rotation=None,
              uv="planar", color=None):
-        """Cria um mesh (só formato free). faces = lista de listas de índices CCW (frente p/ fora).
+        """Creates a mesh (only format free). faces = list of lists of CCW indices (front facing out).
 
-        uv: "planar" (auto-projeta), None (sem UV → textura sólida do canto), ou lista
-        de [(u,v), ...] por face, alinhada com os vértices de cada face.
+        uv: "planar" (auto-project), None (no UV -> solid texture from the corner), or a list
+        of [(u,v), ...] per face, aligned with each face's vertices.
         """
         verts = [tuple(float(c) for c in v) for v in vertices]
         if origin is None:
@@ -536,12 +535,12 @@ class Model:
             for f, uvs in zip(m.faces, uv):
                 f["uv"] = uvs
         elif uv is not None:
-            raise ValueError("uv deve ser 'planar', None ou lista de UVs por face")
+            raise ValueError("uv must be 'planar', None or a list of UVs per face")
         self._attach(m, group)
         return m
 
     def _planar_face_rect(self, name, fi, vidx, verts):
-        """Auto-UV planar: projeta a face num plano e mapeia a bbox na região alocada."""
+        """Auto planar UV: project the face onto a plane and map the bbox to the allocated region."""
         p = [verts[i] for i in vidx]
         n = _face_normal(p)
         up = (0.0, 1.0, 0.0)
@@ -551,7 +550,7 @@ class Model:
         else:
             t = _cross(up, n)
             t = _norm(t)
-        b = _cross(n, t)  # "cima da tela"
+        b = _cross(n, t)  # "top of the screen"
         proj = [(_dot(v, t), -_dot(v, b)) for v in p]
         u0 = min(c[0] for c in proj)
         u1 = max(c[0] for c in proj)
@@ -567,12 +566,11 @@ class Model:
             uvs.append((rect[0] + fu * (rect[2] - rect[0]), rect[1] + fv * (rect[3] - rect[1])))
         return uvs
 
-    # -- textura ------------------------------------------------------------
-
+    # -- texture ------------------------------------------------------------
     def attach_texture_bytes(self, png_bytes, name="texture.png"):
         if png_bytes[:8] != b"\x89PNG\r\n\x1a\n":
-            raise ValueError("attach_texture: os bytes não são um PNG válido")
-        # evita duplicata exata
+            raise ValueError("attach_texture: the bytes are not a valid PNG")
+        # avoid exact duplicate
         for (p, n, u) in self.textures:
             if p == bytes(png_bytes) and n == name:
                 self._sync_primary()
@@ -601,14 +599,13 @@ class Model:
             name = name or "texture.png"
         return self.attach_texture_bytes(data, name)
 
-    # -- carregar de arquivo ------------------------------------------------
-
+    # -- loading from file ---------------------------------------------------
     @classmethod
     def load(cls, path):
-        """Carrega um .bbmodel existente para edição (formato 5.0 ou 4.x).
+        """Loads an existing .bbmodel for editing (format 5.0 or 4.x).
 
-        Nota: o alocador de UV não é reconstruído — cubos novos no modelo
-        carregado exigem uv=[...] explícito ou reset_alloc().
+        Note: the UV allocator is not rebuilt — new cubes in a loaded model
+        require explicit uv=[...] or reset_alloc().
         """
         with open(path, encoding="utf-8") as fh:
             return cls.from_dict(json.load(fh))
@@ -629,7 +626,7 @@ class Model:
         if m.textures:
             m._sync_primary()
         if sum(1 for t in textures if str((t or {}).get("source", "")).startswith("data:")) > 1:
-            print("aviso: múltiplas texturas embutidas; suporte experimental (UVs na textura primária)",
+            print("warning: multiple embedded textures; experimental support (UVs on the primary texture)",
                   file=sys.stderr)
 
         node_by_uuid = {}
@@ -666,7 +663,7 @@ class Model:
                     vis = []
                     for v in f.get("vertices") or []:
                         if str(v) not in idx_of:
-                            raise ValueError(f"mesh {name!r}: face f{fk} referencia vértice {v} inexistente")
+                            raise ValueError(f"mesh {name!r}: face f{fk} references non-existent vertex {v}")
                         vis.append(idx_of[str(v)])
                     uvraw = f.get("uv")
                     uv = None
@@ -744,7 +741,7 @@ class Model:
             (g or {}).get("uuid"): (g or {}).get("name")
             for g in (d.get("groups") or []) if isinstance(g, dict)
         }
-        # outliner 4.x aninha os dados do grupo: recupera uuid->nome dali também
+        # 4.x outliner nests group data: recover uuid->name from there too
         def _scan_outliner(nodes):
             for n in nodes or []:
                 if isinstance(n, dict):
@@ -755,14 +752,13 @@ class Model:
         return m
 
     def reset_alloc(self, gap=1, margin=1):
-        """Cria um alocador de UV novo (só para modelos carregados). Pode sobrepor UVs existentes."""
+        """Creates a new UV allocator (only for loaded models). May overlap existing UVs."""
         self.alloc = UVAllocator(self.tex_w, self.tex_h, gap=gap, margin=margin)
         return self.alloc
 
-    # -- dados derivados ----------------------------------------------------
-
+    # -- derived data -------------------------------------------------------
     def uv_regions(self):
-        """Mapa {(elemento, face): [u1,v1,u2,v2]} para pintar a textura."""
+        """Map {(element, face): [u1,v1,u2,v2]} for painting the texture."""
         out = {}
         for el in self.elements:
             if isinstance(el, Cube):
@@ -803,8 +799,8 @@ class Model:
             "tex_used_pct": round(100.0 * area / total, 1) if total else 0.0,
         }
 
-    def validate(self, style=False, detail=False, tipo="padrao"):
-        """Roda bbcheck sobre o modelo em memória. Retorna dict do check."""
+    def validate(self, style=False, detail=False, tipo="default"):
+        """Runs bbcheck on the in-memory model. Returns the check dict."""
         import os, sys
         sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
         import bbcheck
@@ -839,7 +835,7 @@ class Model:
                 bone_uuid = g.uuid
                 break
         if bone_uuid is None:
-            raise ValueError(f"osso/grupo {bone!r} não existe")
+            raise ValueError(f"bone/group {bone!r} does not exist")
         animators = anim.setdefault("animators", {})
         an = animators.setdefault(bone_uuid, {"name": bone, "type": "bone", "keyframes": []})
         an["name"] = bone
@@ -865,7 +861,7 @@ class Model:
         return chain
 
     def _element_world_transform(self, el):
-        """Devolve função que leva um ponto autoral para o espaço do mundo."""
+        """Returns a function that takes an authored point into world space."""
         el_rot = el.rotation
         el_origin = el.origin
         chain = [(g.rotation, g.origin) for g in self._ancestor_chain(el)]
@@ -879,10 +875,10 @@ class Model:
         return f
 
     def bake(self):
-        """Achata o modelo em triângulos com UV por canto. Usado pelo GLB e pelo render.
+        """Flattens the model into triangles with per-corner UV. Used by GLB and render.
 
-        Retorna dict: tris = [ (p0, p1, p2, uv0, uv1, uv2), ... ] com p em espaço mundo
-        e uv em pixels da textura.
+        Returns dict: tris = [ (p0, p1, p2, uv0, uv1, uv2), ... ] with p in world space
+        and uv in texture pixels.
         """
         tris = []
         for el in self.elements:
@@ -896,11 +892,11 @@ class Model:
                     fs = el.faces[d]
                     if not fs.enabled:
                         continue
-                    idx = FACE_VERTICES[d]  # ordem interna (v0..v3)
-                    corners = face_uv_corners(fs.uv, fs.rotation)  # k-ésimo vértice -> k-ésimo canto
+                    idx = FACE_VERTICES[d]  # internal order (v0..v3)
+                    corners = face_uv_corners(fs.uv, fs.rotation)  # k-th vertex -> k-th corner
                     pts = [verts[i] for i in idx]
                     uvs = corners
-                    # Winding: idêntico ao exportador OBJ do BB -> tris (2,1,0) e (3,2,0)
+                    # Winding: identical to BB's OBJ exporter -> tris (2,1,0) and (3,2,0)
                     tris.append((pts[2], pts[1], pts[0], uvs[2], uvs[1], uvs[0]))
                     tris.append((pts[3], pts[2], pts[0], uvs[3], uvs[2], uvs[0]))
             else:
@@ -914,14 +910,13 @@ class Model:
                                      cuvs[0], cuvs[i], cuvs[i + 1]))
         return {"tris": tris, "tex_w": self.tex_w, "tex_h": self.tex_h, "png": self.texture_png}
 
-    # -- serialização -------------------------------------------------------
-
+    # -- serialization ------------------------------------------------------
     def to_dict(self):
         if any(c.faces and any(fs.enabled for fs in c.faces.values()) for c in self.elements
                if isinstance(c, Cube)) and not self.textures and self.texture_png is None:
             raise ValueError(
-                "modelo tem faces com textura mas nenhuma textura anexada. "
-                "Chame attach_texture(...) antes de salvar."
+                "model has faces with texture but no texture attached. "
+                "Call attach_texture(...) before saving."
             )
         elements = []
         for el in self.elements:
@@ -1052,21 +1047,21 @@ class Model:
 
 
 # ---------------------------------------------------------------------------
-# Preservação de animações entre builds
+# Animation preservation across builds
 # ---------------------------------------------------------------------------
 
 def preserve_animations(prev, model):
-    """Copia as animações de um modelo anterior para o `model` recém-construído.
+    """Copies animations from a previous model into the freshly built `model`.
 
-    `prev` pode ser: um dict .bbmodel, um caminho .bbmodel, ou um Model carregado.
+    `prev` can be: a .bbmodel dict, a path to a .bbmodel, or a loaded Model.
 
-    Por que existe: `animations.animators` é indexado pelo UUID do osso (grupo).
-    Um rebuild reconstrói a hierarquia, então as chaves precisam ser remapeadas
-    pelo NOME do osso. Ossos que sumiram do novo rig são descartados com aviso
-    (o resto da animação é preservado).
+    Why it exists: `animations.animators` is indexed by the bone (group) UUID.
+    A rebuild reconstructs the hierarchy, so the keys must be remapped by bone
+    NAME. Bones that disappeared from the new rig are dropped with a warning
+    (the rest of the animation is preserved).
 
-    Regra de ouro: chame ANTES de m.save()/bburl.build_url(), senão as animações
-    somem do .bbmodel e do link do web app.
+    Golden rule: call BEFORE m.save()/bburl.build_url(), otherwise animations
+    vanish from the .bbmodel and from the web app link.
     """
     import copy
 
@@ -1087,7 +1082,7 @@ def preserve_animations(prev, model):
         with open(prev, encoding="utf-8") as fh:
             return preserve_animations(json.load(fh), model)
     else:
-        raise TypeError("prev deve ser dict, caminho .bbmodel ou Model")
+        raise TypeError("prev must be a dict, a .bbmodel path or a Model")
 
     if not anims:
         return model
@@ -1115,14 +1110,14 @@ def preserve_animations(prev, model):
         out.append(a)
 
     if dropped:
-        print(f"aviso: animação preservada sem ossos inexistentes: {sorted(dropped)}",
+        print(f"warning: animation preserved without missing bones: {sorted(dropped)}",
               file=sys.stderr)
     model.animations = out
     return model
 
 
 # ---------------------------------------------------------------------------
-# util geométrico
+# geometric utilities
 # ---------------------------------------------------------------------------
 
 def _dot(a, b):
@@ -1174,9 +1169,9 @@ def _smoke_test():
 
     m = Model("smoke", tex_w=32, tex_h=32, density=1)
     g_root = m.group("root", origin=[8, 0, 8])
-    g_gone = m.group("fantasma", origin=[8, 0, 8])
-    c = m.cube("bloco", [6, 0, 6], [10, 4, 10], group=g_root)
-    dup = m.cube("bloco_l", [6, 0, 6], [10, 4, 10], group=g_root, origin=[8, 0, 8])
+    g_gone = m.group("ghost", origin=[8, 0, 8])
+    c = m.cube("block", [6, 0, 6], [10, 4, 10], group=g_root)
+    dup = m.cube("block_l", [6, 0, 6], [10, 4, 10], group=g_root, origin=[8, 0, 8])
     dup_east = list(dup.faces["east"].uv)
     dup.mirror(0, 8)
     m.attach_texture_bytes(tiny_png())
@@ -1186,7 +1181,7 @@ def _smoke_test():
     assert isinstance(d["outliner"][0], dict) and d["outliner"][0]["children"]
     fs = d["elements"][1]["faces"]
     assert fs["west"]["uv"] == [dup_east[2], dup_east[1], dup_east[0], dup_east[3]], \
-        "mirror deve trocar west/east + flip U"
+        "mirror must swap west/east + flip U"
     assert c.faces["north"].enabled and not None
     baked = m.bake()
     assert len(baked["tris"]) == 2 * 2 * 6
@@ -1195,51 +1190,51 @@ def _smoke_test():
     path = os.path.join(tempfile.gettempdir(), "bbmodel_smoke.bbmodel")
     m.save(path)
     ld = Model.load(path)
-    assert ld.to_dict() == d, "roundtrip save/load divergiu"
-    assert ld.bake()["tris"] == baked["tris"], "roundtrip save/load mudou a geometria"
+    assert ld.to_dict() == d, "save/load roundtrip diverged"
+    assert ld.bake()["tris"] == baked["tris"], "save/load roundtrip changed geometry"
     assert ld.groups[0].children and ld.root_nodes and ld.root_nodes[0] is ld.groups[0]
     try:
-        ld.cube("novo", [0, 0, 0], [2, 2, 2], group="root")
-        raise SystemExit("deveria ter recusado cubo sem UV em modelo carregado")
+        ld.cube("new", [0, 0, 0], [2, 2, 2], group="root")
+        raise SystemExit("should have refused a cube without UV in a loaded model")
     except ValueError as exc:
-        assert "alocador" in str(exc)
+        assert "allocator" in str(exc)
     ld.reset_alloc()
-    ld.cube("novo", [0, 0, 0], [2, 2, 2], group="root")
+    ld.cube("new", [0, 0, 0], [2, 2, 2], group="root")
 
-    # --- uuids determinísticos + preservação de animações ---------------------
+    # --- deterministic uuids + animation preservation ---------------------
     assert det_uuid("group", "root") == det_uuid("group", "root")
     assert det_uuid("group", "root") != det_uuid("cube", "root")
 
-    # animação com 2 ossos; um deles some no rebuild
+    # animation with 2 bones; one of them disappears in the rebuild
     anim = [{
-        "uuid": guid(), "name": "voar", "loop": "loop", "length": 1,
+        "uuid": guid(), "name": "fly", "loop": "loop", "length": 1,
         "animators": {
             g_root.uuid: {"name": "root", "type": "bone", "keyframes": [
                 {"uuid": guid(), "channel": "position", "time": 0,
                  "data_points": [{"x": 0, "y": 0, "z": 0}]}]},
-            g_gone.uuid: {"name": "fantasma", "type": "bone", "keyframes": [
+            g_gone.uuid: {"name": "ghost", "type": "bone", "keyframes": [
                 {"uuid": guid(), "channel": "rotation", "time": 0,
                  "data_points": [{"x": 0, "y": 0, "z": 90}]}]},
         },
     }]
     m.animations = anim
-    assert m.to_dict()["animations"][0]["name"] == "voar", "to_dict deve emitir animações"
+    assert m.to_dict()["animations"][0]["name"] == "fly", "to_dict must emit animations"
 
-    # rebuild: mesmas hierarquia, mesmo script -> osso mantém o UUID
+    # rebuild: same hierarchy, same script -> bone keeps its UUID
     m2 = Model("smoke", tex_w=64, tex_h=64, density=2)
     root2 = m2.group("root")
     m2.cube("a", [0, 0, 0], [4, 4, 4], group=root2)
     m2.attach_texture_bytes(tiny_png())
-    assert root2.uuid == g_root.uuid, "uuid de grupo deve ser estável entre builds"
+    assert root2.uuid == g_root.uuid, "group uuid must be stable across builds"
 
     preserve_animations({"groups": [
         {"uuid": g_root.uuid, "name": "root"},
-        {"uuid": g_gone.uuid, "name": "fantasma"}], "animations": anim}, m2)
+        {"uuid": g_gone.uuid, "name": "ghost"}], "animations": anim}, m2)
     assert len(m2.animations) == 1
     kept = m2.animations[0]["animators"]
-    assert list(kept) == [root2.uuid], "só ossos existentes devem sobrar"
+    assert list(kept) == [root2.uuid], "only existing bones must remain"
     assert kept[root2.uuid]["name"] == "root"
-    assert m2.to_dict()["animations"], "animações preservadas precisam chegar no to_dict"
+    assert m2.to_dict()["animations"], "preserved animations must reach to_dict"
     os.unlink(path)
     print("smoke OK —", m.stats())
 

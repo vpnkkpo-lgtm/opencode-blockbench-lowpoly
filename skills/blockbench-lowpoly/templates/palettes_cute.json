@@ -1,80 +1,276 @@
 {
-  "_doc": "Paletas cute cartoon. Roles: outline (contorno/sombra dura), base, light, dark (painel 3 tons), accent (detalhe quente), blush (bochecha), shadow (sombra projetada/fria), background (fundo de preview). NUNCA preto/branco puros. Use com bbtex.load_palette() + bbtex.shade().",
+  "_doc": "Cute cartoon palettes. Roles: outline (hard shadow/contour), base, light, dark (3-tone panel), accent (warm detail), blush (cheek), shadow (projected/cold shadow), background (preview background). NEVER pure black/white. Use with bbtex.load_palette() + bbtex.shade().",
   "cogumelo": {
-    "label": "Cogumelo vermelho (mascote clássico)",
-    "outline": ["#4a2d3a", "#5a3242", "#3d2531"],
-    "base": ["#e05a5a", "#d94f5c", "#e8624f"],
-    "light": ["#f28585", "#f27d8a", "#f7917a"],
-    "dark": ["#a83a4a", "#9c3450", "#ad3d42"],
-    "accent": ["#ffe9c9", "#fff2d9", "#f7ddb8"],
-    "blush": ["#f2a0a8", "#eb94a2", "#f5aab0"],
-    "shadow": ["#7a4a6a", "#6b3f60", "#84506e"],
+    "label": "Red mushroom (classic mascot)",
+    "outline": [
+      "#4a2d3a",
+      "#5a3242",
+      "#3d2531"
+    ],
+    "base": [
+      "#e05a5a",
+      "#d94f5c",
+      "#e8624f"
+    ],
+    "light": [
+      "#f28585",
+      "#f27d8a",
+      "#f7917a"
+    ],
+    "dark": [
+      "#a83a4a",
+      "#9c3450",
+      "#ad3d42"
+    ],
+    "accent": [
+      "#ffe9c9",
+      "#fff2d9",
+      "#f7ddb8"
+    ],
+    "blush": [
+      "#f2a0a8",
+      "#eb94a2",
+      "#f5aab0"
+    ],
+    "shadow": [
+      "#7a4a6a",
+      "#6b3f60",
+      "#84506e"
+    ],
     "background": "#f2e6e0"
   },
   "sapo": {
-    "label": "Sapo/jade verde",
-    "outline": ["#2e4a2a", "#27422b", "#33502e"],
-    "base": ["#7ec850", "#74bf58", "#88d05a"],
-    "light": ["#a5e070", "#9ed878", "#aee878"],
-    "dark": ["#4e8f3a", "#478542", "#54963c"],
-    "accent": ["#f2e8c9", "#f5ecd0", "#efdfb8"],
-    "blush": ["#f2a0a8", "#eb9aa4", "#f5a8a6"],
-    "shadow": ["#4a6a5a", "#43625a", "#506f58"],
+    "label": "Green frog/jade",
+    "outline": [
+      "#2e4a2a",
+      "#27422b",
+      "#33502e"
+    ],
+    "base": [
+      "#7ec850",
+      "#74bf58",
+      "#88d05a"
+    ],
+    "light": [
+      "#a5e070",
+      "#9ed878",
+      "#aee878"
+    ],
+    "dark": [
+      "#4e8f3a",
+      "#478542",
+      "#54963c"
+    ],
+    "accent": [
+      "#f2e8c9",
+      "#f5ecd0",
+      "#efdfb8"
+    ],
+    "blush": [
+      "#f2a0a8",
+      "#eb9aa4",
+      "#f5a8a6"
+    ],
+    "shadow": [
+      "#4a6a5a",
+      "#43625a",
+      "#506f58"
+    ],
     "background": "#e4efe0"
   },
   "gato": {
-    "label": "Gato lavanda/roxo",
-    "outline": ["#3d2e52", "#45345c", "#38294a"],
-    "base": ["#c9b6e4", "#bfa9dd", "#d1c0e8"],
-    "light": ["#e0d0f5", "#d8c8ef", "#e8dcf8"],
-    "dark": ["#8f7ab8", "#8670ae", "#987fbe"],
-    "accent": ["#f2a0c0", "#eb96ba", "#f5aac8"],
-    "blush": ["#f5b0c8", "#efa8c2", "#f8bcd0"],
-    "shadow": ["#5a4a72", "#52426a", "#624f7a"],
+    "label": "Lavender/purple cat",
+    "outline": [
+      "#3d2e52",
+      "#45345c",
+      "#38294a"
+    ],
+    "base": [
+      "#c9b6e4",
+      "#bfa9dd",
+      "#d1c0e8"
+    ],
+    "light": [
+      "#e0d0f5",
+      "#d8c8ef",
+      "#e8dcf8"
+    ],
+    "dark": [
+      "#8f7ab8",
+      "#8670ae",
+      "#987fbe"
+    ],
+    "accent": [
+      "#f2a0c0",
+      "#eb96ba",
+      "#f5aac8"
+    ],
+    "blush": [
+      "#f5b0c8",
+      "#efa8c2",
+      "#f8bcd0"
+    ],
+    "shadow": [
+      "#5a4a72",
+      "#52426a",
+      "#624f7a"
+    ],
     "background": "#ece6f2"
   },
   "raposa": {
-    "label": "Raposa laranja",
-    "outline": ["#4a2d1e", "#543322", "#40271a"],
-    "base": ["#e8913a", "#df8a34", "#f09942"],
-    "light": ["#f7b06a", "#f5aa60", "#f9b874"],
-    "dark": ["#b5651f", "#ab5e1c", "#bd6c24"],
-    "accent": ["#ffe9c9", "#fff2d9", "#f7ddb8"],
-    "blush": ["#f2a0a0", "#eb9898", "#f5acac"],
-    "shadow": ["#6a4a3a", "#624232", "#725242"],
+    "label": "Orange fox",
+    "outline": [
+      "#4a2d1e",
+      "#543322",
+      "#40271a"
+    ],
+    "base": [
+      "#e8913a",
+      "#df8a34",
+      "#f09942"
+    ],
+    "light": [
+      "#f7b06a",
+      "#f5aa60",
+      "#f9b874"
+    ],
+    "dark": [
+      "#b5651f",
+      "#ab5e1c",
+      "#bd6c24"
+    ],
+    "accent": [
+      "#ffe9c9",
+      "#fff2d9",
+      "#f7ddb8"
+    ],
+    "blush": [
+      "#f2a0a0",
+      "#eb9898",
+      "#f5acac"
+    ],
+    "shadow": [
+      "#6a4a3a",
+      "#624232",
+      "#725242"
+    ],
     "background": "#f2e8dc"
   },
   "mint": {
-    "label": "Mago mint/teal com ouro",
-    "outline": ["#1f3d38", "#1a3632", "#244440"],
-    "base": ["#5fc9b0", "#56c0a8", "#68d0b8"],
-    "light": ["#8fe0cc", "#88d8c4", "#98e8d4"],
-    "dark": ["#3a8f7a", "#348672", "#409880"],
-    "accent": ["#f2d06b", "#ebc863", "#f8d873"],
-    "blush": ["#f2a0b8", "#eb98b0", "#f5a8c0"],
-    "shadow": ["#2e5a52", "#28524a", "#34625a"],
+    "label": "Mint/teal mage with gold",
+    "outline": [
+      "#1f3d38",
+      "#1a3632",
+      "#244440"
+    ],
+    "base": [
+      "#5fc9b0",
+      "#56c0a8",
+      "#68d0b8"
+    ],
+    "light": [
+      "#8fe0cc",
+      "#88d8c4",
+      "#98e8d4"
+    ],
+    "dark": [
+      "#3a8f7a",
+      "#348672",
+      "#409880"
+    ],
+    "accent": [
+      "#f2d06b",
+      "#ebc863",
+      "#f8d873"
+    ],
+    "blush": [
+      "#f2a0b8",
+      "#eb98b0",
+      "#f5a8c0"
+    ],
+    "shadow": [
+      "#2e5a52",
+      "#28524a",
+      "#34625a"
+    ],
     "background": "#e0f0ec"
   },
   "neve": {
-    "label": "Nevado/azul claro (não use branco puro)",
-    "outline": ["#2e4257", "#293d52", "#34485d"],
-    "base": ["#bfe0f5", "#b6d8f0", "#c8e8f8"],
-    "light": ["#e8f4ff", "#e0eeff", "#f0f8ff"],
-    "dark": ["#7aa8cc", "#729ec4", "#82b0d2"],
-    "accent": ["#f2b0c0", "#ebaab8", "#f5b8c8"],
-    "blush": ["#f2a0b0", "#eb98a8", "#f5a8b8"],
-    "shadow": ["#4a5f7a", "#435870", "#526780"],
+    "label": "Snowy/light blue (never pure white)",
+    "outline": [
+      "#2e4257",
+      "#293d52",
+      "#34485d"
+    ],
+    "base": [
+      "#bfe0f5",
+      "#b6d8f0",
+      "#c8e8f8"
+    ],
+    "light": [
+      "#e8f4ff",
+      "#e0eeff",
+      "#f0f8ff"
+    ],
+    "dark": [
+      "#7aa8cc",
+      "#729ec4",
+      "#82b0d2"
+    ],
+    "accent": [
+      "#f2b0c0",
+      "#ebaab8",
+      "#f5b8c8"
+    ],
+    "blush": [
+      "#f2a0b0",
+      "#eb98a8",
+      "#f5a8b8"
+    ],
+    "shadow": [
+      "#4a5f7a",
+      "#435870",
+      "#526780"
+    ],
     "background": "#e8eef4"
   },
   "doce": {
-    "label": "Doce/rosa chiclete",
-    "outline": ["#4a2438", "#542a3e", "#402030"],
-    "base": ["#f5a0c0", "#ef98b8", "#f8a8c8"],
-    "light": ["#ffc9dd", "#f8c0d4", "#ffd0e2"],
-    "dark": ["#c96a92", "#c06288", "#d0729a"],
-    "accent": ["#8fe0cc", "#88d8c4", "#98e8d4"],
-    "blush": ["#f2789a", "#eb7092", "#f580a2"],
-    "shadow": ["#7a4260", "#724058", "#825068"],
+    "label": "Candy/bubblegum pink",
+    "outline": [
+      "#4a2438",
+      "#542a3e",
+      "#402030"
+    ],
+    "base": [
+      "#f5a0c0",
+      "#ef98b8",
+      "#f8a8c8"
+    ],
+    "light": [
+      "#ffc9dd",
+      "#f8c0d4",
+      "#ffd0e2"
+    ],
+    "dark": [
+      "#c96a92",
+      "#c06288",
+      "#d0729a"
+    ],
+    "accent": [
+      "#8fe0cc",
+      "#88d8c4",
+      "#98e8d4"
+    ],
+    "blush": [
+      "#f2789a",
+      "#eb7092",
+      "#f580a2"
+    ],
+    "shadow": [
+      "#7a4260",
+      "#724058",
+      "#825068"
+    ],
     "background": "#f8e8ee"
   }
 }

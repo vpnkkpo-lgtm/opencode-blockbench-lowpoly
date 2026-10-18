@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
 """
-bbtex.py — PNG em Python puro + pintura cartoon para texturas de .bbmodel.
+bbtex.py — pure-Python PNG + cartoon painting for .bbmodel textures.
 
-Sem dependências (nem Pillow, nem numpy). Suporta:
-- encode PNG: RGBA (color type 6) e indexado 8-bit (color type 3, com PLTE/tRNS)
-- decode PNG: color types 0/2/3/4/6, bit depth 1/2/4/8/16 (sem interlace)
-- Canvas com pincéis cartoon: panel, ao, outline, eyes, blush, mouth, stripes, dots
-- Paletas curadas (ver templates/palettes_cute.json)
+No dependencies (not even Pillow or numpy). Supports:
+- PNG encode: RGBA (color type 6) and indexed 8-bit (color type 3, with PLTE/tRNS)
+- PNG decode: color types 0/2/3/4/6, bit depths 1/2/4/8/16 (no interlace)
+- Cartoon Canvas with brushes: panel, ao, outline, eyes, blush, mouth, stripes, dots
+- Curated palettes (see templates/palettes_cute.json)
 
-Regras de estilo cute cartoon (ver references/style-cute-cartoon.md):
-- NUNCA use #000000 nem #FFFFFF; sombra é colorida (roxo/azul), luz é quente.
-- Cada material com 2-3 tons (base, claro, escuro) + AO nas bordas inferiores.
+Cute cartoon style rules (see references/style-cute-cartoon.md):
+- NEVER use #000000 or #FFFFFF; shadow is colored (purple/blue), light is warm.
+- Each material with 2-3 tones (base, light, dark) + AO on lower edges.
 """
 
 import colorsys
@@ -31,13 +31,13 @@ def _chunk(tag, data):
 
 
 def encode_png(width, height, rgba):
-    """rgba: bytearray/bytes de w*h*4 (ordem RGBA, linha a linha)."""
+    """rgba: bytearray/bytes of w*h*4 (RGBA order, row by row)."""
     if len(rgba) != width * height * 4:
-        raise ValueError(f"rgba tem {len(rgba)} bytes, esperado {width * height * 4}")
+        raise ValueError(f"rgba has {len(rgba)} bytes, expected {width * height * 4}")
     raw = bytearray()
     stride = width * 4
     for y in range(height):
-        raw.append(0)  # filtro None
+        raw.append(0)  # filter None
         raw += rgba[y * stride:(y + 1) * stride]
     ihdr = struct.pack(">IIBBBBB", width, height, 8, 6, 0, 0, 0)
     return (PNG_SIG + _chunk(b"IHDR", ihdr)
@@ -46,11 +46,11 @@ def encode_png(width, height, rgba):
 
 
 def encode_png_indexed(width, height, indices, palette):
-    """PNG indexado 8-bit. palette: lista de (r,g,b) ou (r,g,b,a), até 256 cores."""
+    """8-bit indexed PNG. palette: list of (r,g,b) or (r,g,b,a), up to 256 colors."""
     if len(indices) != width * height:
-        raise ValueError("indices com tamanho errado")
+        raise ValueError("indices with wrong size")
     if len(palette) > 256:
-        raise ValueError("paleta com mais de 256 cores")
+        raise ValueError("palette with more than 256 colors")
     plte = bytearray()
     alphas = bytearray()
     last_alpha = 0
@@ -114,16 +114,16 @@ def _unfilter(raw, width, height, bpp, stride):
                 upleft = prev[i - bpp] if i >= bpp else 0
                 line[i] = (line[i] + _paeth(left, up, upleft)) & 0xFF
         else:
-            raise ValueError(f"filtro PNG desconhecido: {ftype}")
+            raise ValueError(f"unknown PNG filter: {ftype}")
         out += line
         prev = line
     return out
 
 
 def decode_png(data):
-    """Decodifica PNG para RGBA. Retorna dict(width, height, rgba bytes, palette=None)."""
+    """Decode PNG to RGBA. Returns dict(width, height, rgba bytes, palette=None)."""
     if data[:8] != PNG_SIG:
-        raise ValueError("não é um PNG")
+        raise ValueError("not a PNG")
     pos = 8
     width = height = bitdepth = colortype = None
     interlace = 0
@@ -146,11 +146,11 @@ def decode_png(data):
         elif tag == b"IEND":
             break
     if width is None:
-        raise ValueError("PNG sem IHDR")
+        raise ValueError("PNG without IHDR")
     if interlace:
-        raise ValueError("PNG entrelaçado não suportado")
+        raise ValueError("interlaced PNG not supported")
     if colortype not in (0, 2, 3, 4, 6):
-        raise ValueError(f"color type {colortype} não suportado")
+        raise ValueError(f"color type {colortype} not supported")
     channels = {0: 1, 2: 3, 3: 1, 4: 2, 6: 4}[colortype]
     if bitdepth == 16:
         bpp = channels * 2
@@ -198,7 +198,7 @@ def decode_png(data):
                 px += 4
         elif colortype == 3:
             if plte is None:
-                raise ValueError("PNG indexado sem PLTE")
+                raise ValueError("indexed PNG without PLTE")
             for x in range(width):
                 idx = vals[x]
                 r, g, b = plte[idx]
@@ -219,7 +219,7 @@ def decode_png(data):
 
 
 def png_min_alpha(data):
-    """Menor alpha presente no PNG (255 = totalmente opaco)."""
+    """Smallest alpha present in the PNG (255 = fully opaque)."""
     dec = decode_png(data)
     return min(dec["rgba"][3::4])
 
@@ -229,7 +229,7 @@ def blank_png(width=16, height=16, color=(255, 0, 255, 255)):
 
 
 # ---------------------------------------------------------------------------
-# cores
+# colors
 # ---------------------------------------------------------------------------
 
 def col(hex_or_tuple):
@@ -248,21 +248,21 @@ def hexof(rgba):
 
 
 def shade(color, factor):
-    """Clareia (factor>1) ou escurece (factor<1) mexendo em V e S do HSV.
+    """Lighten (factor>1) or darken (factor<1) by adjusting V and S of HSV.
 
-    Sombra "quente": ao escurecer, satura um pouco mais e puxa para roxo/azul.
+    "Warm" shadow: when darkening, slightly saturate and pull toward purple/blue.
     """
     r, g, b, a = col(color)
     h, s, v = colorsys.rgb_to_hsv(r / 255, g / 255, b / 255)
     if factor >= 1:
         v = min(1.0, v * factor)
         s = max(0.0, s * (1.0 - 0.25 * (factor - 1)))
-        # luz levemente quente
+        # slightly warm light
         h = (h + 0.015) % 1.0
     else:
         v = v * factor
         s = min(1.0, s * 1.08)
-        # sombra levemente fria (roxo/azul)
+        # slightly cool shadow (purple/blue)
         h = (h + 0.965) % 1.0
     r2, g2, b2 = colorsys.hsv_to_rgb(h, s, v)
     return (round(r2 * 255), round(g2 * 255), round(b2 * 255), a)
@@ -278,7 +278,7 @@ def load_palette(path, name):
     with open(path, encoding="utf-8") as fh:
         data = json.load(fh)
     if name not in data:
-        raise KeyError(f"paleta {name!r} não existe em {path}: {sorted(data)}")
+        raise KeyError(f"palette {name!r} does not exist in {path}: {sorted(data)}")
     return data[name]
 
 
@@ -296,8 +296,7 @@ class Canvas:
     def for_model(cls, model, fill=(0, 0, 0, 0)):
         return cls(model.tex_w, model.tex_h, fill=fill)
 
-    # -- básico -------------------------------------------------------------
-
+    # -- basic --------------------------------------------------------------
     def inside(self, x, y):
         return 0 <= x < self.w and 0 <= y < self.h
 
@@ -347,8 +346,7 @@ class Canvas:
                 if dx * dx + dy * dy <= 1.02:
                     self.set(xx, yy, color)
 
-    # -- regiões UV ---------------------------------------------------------
-
+    # -- UV regions ---------------------------------------------------------
     @staticmethod
     def region_bbox(region):
         u1, v1, u2, v2 = region
@@ -360,10 +358,9 @@ class Canvas:
         self.rect(x, y, w, h, color)
         return x, y, w, h
 
-    # -- pincéis cartoon ----------------------------------------------------
-
+    # -- cartoon brushes ----------------------------------------------------
     def panel(self, region, base, light=None, dark=None, ao_color=None):
-        """Painel cartoon 3 tons: base + linha superior clara + linha inferior escura."""
+        """Cartoon 3-tone panel: base + light top line + dark bottom line."""
         x, y, w, h = self.fill_region(region, base)
         light = light or shade(base, 1.18)
         dark = dark or shade(base, 0.8)
@@ -374,7 +371,7 @@ class Canvas:
         return x, y, w, h
 
     def ao(self, region, color, edges="bl"):
-        """Ambient occlusion pintada: escurece aresta(s) inferiores."""
+        """Painted ambient occlusion: darkens lower edge(s)."""
         x, y, w, h = self.region_bbox(region)
         if "b" in edges:
             self.line_h(x, y + h - 1, w, color)
@@ -413,7 +410,7 @@ class Canvas:
                 self.set(xx, yy, c)
 
     def dither(self, region, c1, c2, density=0.5, seed=1):
-        """Dither determinístico 2 cores (sem ruído caótico — estilo limpo)."""
+        """Deterministic 2-color dither (no chaotic noise — clean style)."""
         x, y, w, h = self.region_bbox(region)
         s = seed & 0x7FFFFFFF
         for yy in range(y, y + h):
@@ -423,7 +420,7 @@ class Canvas:
                 self.set(xx, yy, c)
 
     def eyes(self, region, eye_color, spark_color, size=2, gap=4, y_frac=0.45, mirror=True):
-        """Dois olhos redondos com brilho — centro horizontal da região."""
+        """Two round eyes with spark — horizontal center of the region."""
         x, y, w, h = self.region_bbox(region)
         cy = y + round(y_frac * (h - size))
         cx = x + w // 2
@@ -441,7 +438,7 @@ class Canvas:
         self.rect(x + w - inset - width, cy, width, 1, color)
 
     def mouth_smile(self, region, color, y_frac=0.72, width=4):
-        """Sorriso em U de 1px: pontas em cima, meio embaixo."""
+        """1px U smile: tips on top, middle below."""
         x, y, w, h = self.region_bbox(region)
         cx = x + w // 2
         cy = y + round(y_frac * (h - 1))
@@ -460,10 +457,10 @@ class Canvas:
         self.set(cx - 1, cy + 1, color)
 
     def spot(self, region, cx, cy, rx, ry=None, color="#ffe9c9", snap=False):
-        """Mancha circular clipada à região. cx/cy em fração (0..1) da região.
+        """Circular blot clipped to the region. cx/cy as fractions (0..1) of the region.
 
-        snap=True arredonda o centro para pixel inteiro (círculos simétricos,
-        sem cara de "cruz" quando o raio é pequeno).
+        snap=True rounds the center to a whole pixel (symmetric circles,
+        no "cross" look when the radius is small).
         """
         x, y, w, h = self.region_bbox(region)
         ry = rx if ry is None else ry
@@ -480,7 +477,7 @@ class Canvas:
                     self.set(xx, yy, color)
 
     def spots(self, region, color, coords):
-        """Pintas quadradas em coordenadas relativas (0..1) da região."""
+        """Square spots at relative coordinates (0..1) of the region."""
         x, y, w, h = self.region_bbox(region)
         for (fx, fy, size) in coords:
             px = x + min(w - 1, int(fx * w))
@@ -488,7 +485,7 @@ class Canvas:
             self.rect(px, py, size, size, color)
 
     def bleed(self, region, px=1):
-        """Copia as bordas da região para fora px pixels (evita costura com filtro linear)."""
+        """Copies the region borders outward by px pixels (avoids seams with linear filtering)."""
         x, y, w, h = self.region_bbox(region)
         for i in range(1, px + 1):
             for xx in range(x, x + w):
@@ -502,8 +499,7 @@ class Canvas:
                 c = self.get(x, yy)
                 self.set(x - i, yy, c)
 
-    # -- saída --------------------------------------------------------------
-
+    # -- output -------------------------------------------------------------
     def to_png(self, indexed=None):
         if indexed is None:
             return encode_png(self.w, self.h, self.rgba)
@@ -517,7 +513,7 @@ class Canvas:
                 order.append(rgba)
             idx[p] = used[rgba]
         if len(order) > 256:
-            raise ValueError(f"{len(order)} cores > 256; use to_png() RGBA")
+            raise ValueError(f"{len(order)} colors > 256; use to_png() RGBA")
         return encode_png_indexed(self.w, self.h, idx, order)
 
     def palette_used(self):
@@ -535,14 +531,14 @@ def _smoke_test():
     png = c.to_png()
     dec = decode_png(png)
     assert (dec["width"], dec["height"]) == (16, 16)
-    assert dec["rgba"] == bytes(c.rgba), "roundtrip RGBA falhou"
+    assert dec["rgba"] == bytes(c.rgba), "RGBA roundtrip failed"
     png_i = c.to_png(indexed=True)
     dec_i = decode_png(png_i)
-    assert dec_i["rgba"] == bytes(c.rgba), "roundtrip indexado falhou"
+    assert dec_i["rgba"] == bytes(c.rgba), "indexed roundtrip failed"
     assert png_min_alpha(png) == 0
     assert 1 < len(c.palette_used()) <= 12
     s = shade("#e04f5f", 0.7)
-    assert s[0] > s[2], "sombra deve puxar para frio/roxo"
+    assert s[0] > s[2], "shadow must pull toward cool/purple"
     print("bbtex smoke OK —", hexof(shade("#e04f5f", 1.2)), hexof(s))
 
 

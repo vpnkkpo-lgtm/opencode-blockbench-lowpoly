@@ -1,21 +1,21 @@
 #!/usr/bin/env python3
-"""card_v7.py — card de loja multi-tema.
+"""card_v7.py — multi-theme store card.
 
-Mesmo layout do v6 (hero lateral + checklist + ficha + CTA), mas com TEMAS
-de vibe diferente pra cada tipo de modelo.
+Same layout as v6 (side hero + checklist + info panel + CTA), but with
+different VIBE THEMES for each model type.
 
-Temas:
-  casual       candy rosa/roxo, fofinho (default)
-  horror       vermelho sangue, gotejas, clima de terror
-  dark_fantasy roxo/preto, runas e brasas, medieval sombrio
-  sci_fi       neon cyan/roxo, grade futurista, cyber
-  natureza     verde/marrom, folhas, acolhedor
-  royal        roxo/dourado, luxo, elegante
+Themes:
+  casual       candy pink/purple, cute (default)
+  horror       blood red, drips, horror mood
+  dark_fantasy purple/black, runes and embers, dark medieval
+  sci_fi       neon cyan/purple, futuristic grid, cyber
+  nature       green/brown, leaves, cozy
+  royal        purple/gold, luxury, elegant
 
 CLI:
-  python card_v7.py --theme horror --name "Zumbi" --desc "..." \
-      --preview prev.png --out card.png --info "Chave: valor" \
-      [--price "R$ 19,90" --old-price "R$ 39,90"] [--badge "NOVO"]
+  python card_v7.py --theme horror --name "Zombie" --desc "..." \
+      --preview prev.png --out card.png --info "Key: value" \
+      [--price "R$ 19,90" --old-price "R$ 39,90"] [--badge "NEW"]
 """
 import argparse
 import math
@@ -29,7 +29,7 @@ W, H = 1000, 660
 SIDE_W = 400
 
 # ---------------------------------------------------------------- THEMES
-# cada tema define paleta + textos de CTA + cor de fundo/hero/acento
+# each theme defines palette + CTA texts + bg/hero/accent colors
 THEMES = {
     "casual": dict(
         bg_top=(255, 120, 175), bg_bot=(126, 92, 226),
@@ -38,13 +38,13 @@ THEMES = {
         ink=(32, 24, 52), title=(32, 24, 52), tagline=(70, 58, 96),
         accent=(255, 74, 140), accent2=(46, 196, 236),
         check=(72, 205, 128), check2=(46, 196, 236),
-        cta=(255, 74, 140), cta_shadow=(20, 60, 90), cta_text="ADICIONAR AO MEU JOGO",
-        cta_buy="COMPRAR AGORA",
-        tag_fill=(255, 205, 55), tag_text=(32, 24, 52), tag="MODELO 3D",
+        cta=(255, 74, 140), cta_shadow=(20, 60, 90), cta_text="ADD TO MY GAME",
+        cta_buy="BUY NOW",
+        tag_fill=(255, 205, 55), tag_text=(32, 24, 52), tag="3D MODEL",
         stat_bg=(248, 240, 255), stat_v=(32, 24, 52), stat_k=(120, 100, 150),
         stat_div=(200, 186, 226),
         seal=(255, 205, 55), seal_text=(32, 24, 52), seal_mid=(255, 74, 140),
-        badge="PRONTO PRA USAR",
+        badge="READY TO USE",
         price_fill=(72, 205, 128), price_text=(255, 255, 255),
         price_old=(20, 90, 60), price_hole=(255, 251, 238),
         deco="stripes",
@@ -56,13 +56,13 @@ THEMES = {
         ink=(12, 2, 4), title=(198, 22, 28), tagline=(150, 120, 124),
         accent=(198, 22, 28), accent2=(120, 10, 16),
         check=(150, 14, 20), check2=(90, 8, 12),
-        cta=(178, 16, 24), cta_shadow=(30, 0, 2), cta_text="ADICIONAR AO MEU JOGO",
-        cta_buy="COMPRAR AGORA",
-        tag_fill=(150, 14, 20), tag_text=(255, 235, 235), tag="MODELO 3D",
+        cta=(178, 16, 24), cta_shadow=(30, 0, 2), cta_text="ADD TO MY GAME",
+        cta_buy="BUY NOW",
+        tag_fill=(150, 14, 20), tag_text=(255, 235, 235), tag="3D MODEL",
         stat_bg=(40, 6, 10), stat_v=(235, 220, 222), stat_k=(150, 110, 114),
         stat_div=(90, 20, 26),
         seal=(150, 14, 20), seal_text=(255, 235, 235), seal_mid=(255, 120, 120),
-        badge="PRONTO PRA USAR",
+        badge="READY TO USE",
         price_fill=(120, 10, 16), price_text=(255, 235, 235),
         price_old=(200, 170, 172), price_hole=(58, 8, 12),
         deco="blood",
@@ -74,13 +74,13 @@ THEMES = {
         ink=(12, 6, 22), title=(214, 176, 110), tagline=(150, 132, 180),
         accent=(214, 176, 110), accent2=(140, 90, 220),
         check=(214, 176, 110), check2=(140, 90, 220),
-        cta=(120, 70, 200), cta_shadow=(16, 8, 30), cta_text="ADICIONAR AO MEU JOGO",
-        cta_buy="COMPRAR AGORA",
-        tag_fill=(214, 176, 110), tag_text=(30, 16, 46), tag="MODELO 3D",
+        cta=(120, 70, 200), cta_shadow=(16, 8, 30), cta_text="ADD TO MY GAME",
+        cta_buy="BUY NOW",
+        tag_fill=(214, 176, 110), tag_text=(30, 16, 46), tag="3D MODEL",
         stat_bg=(30, 16, 52), stat_v=(224, 206, 240), stat_k=(150, 130, 180),
         stat_div=(80, 50, 120),
         seal=(214, 176, 110), seal_text=(30, 16, 46), seal_mid=(30, 16, 46),
-        badge="PRONTO PRA USAR",
+        badge="READY TO USE",
         price_fill=(214, 176, 110), price_text=(30, 16, 46),
         price_old=(150, 130, 110), price_hole=(46, 24, 78),
         deco="embers",
@@ -92,13 +92,13 @@ THEMES = {
         ink=(2, 8, 16), title=(0, 240, 255), tagline=(120, 170, 190),
         accent=(0, 240, 255), accent2=(255, 60, 200),
         check=(0, 240, 255), check2=(255, 60, 200),
-        cta=(0, 210, 235), cta_shadow=(0, 20, 40), cta_text="ADICIONAR AO MEU JOGO",
-        cta_buy="COMPRAR AGORA",
-        tag_fill=(0, 240, 255), tag_text=(2, 8, 16), tag="MODELO 3D",
+        cta=(0, 210, 235), cta_shadow=(0, 20, 40), cta_text="ADD TO MY GAME",
+        cta_buy="BUY NOW",
+        tag_fill=(0, 240, 255), tag_text=(2, 8, 16), tag="3D MODEL",
         stat_bg=(8, 22, 40), stat_v=(200, 250, 255), stat_k=(90, 150, 175),
         stat_div=(20, 80, 110),
         seal=(0, 240, 255), seal_text=(2, 8, 16), seal_mid=(255, 60, 200),
-        badge="PRONTO PRA USAR",
+        badge="READY TO USE",
         price_fill=(255, 60, 200), price_text=(255, 255, 255),
         price_old=(160, 200, 215), price_hole=(10, 24, 48),
         deco="grid",
@@ -110,13 +110,13 @@ THEMES = {
         ink=(26, 44, 26), title=(30, 60, 30), tagline=(60, 80, 56),
         accent=(200, 120, 50), accent2=(70, 130, 80),
         check=(90, 170, 90), check2=(200, 150, 60),
-        cta=(90, 165, 90), cta_shadow=(30, 60, 30), cta_text="ADICIONAR AO MEU JOGO",
-        cta_buy="COMPRAR AGORA",
-        tag_fill=(240, 210, 120), tag_text=(40, 60, 30), tag="MODELO 3D",
+        cta=(90, 165, 90), cta_shadow=(30, 60, 30), cta_text="ADD TO MY GAME",
+        cta_buy="BUY NOW",
+        tag_fill=(240, 210, 120), tag_text=(40, 60, 30), tag="3D MODEL",
         stat_bg=(240, 245, 225), stat_v=(30, 60, 30), stat_k=(110, 130, 90),
         stat_div=(190, 205, 170),
         seal=(240, 210, 120), seal_text=(40, 60, 30), seal_mid=(200, 120, 50),
-        badge="PRONTO PRA USAR",
+        badge="READY TO USE",
         price_fill=(90, 165, 90), price_text=(255, 255, 255),
         price_old=(70, 100, 60), price_hole=(240, 245, 225),
         deco="leaves",
@@ -128,13 +128,13 @@ THEMES = {
         ink=(16, 6, 30), title=(240, 205, 120), tagline=(180, 160, 200),
         accent=(240, 205, 120), accent2=(150, 90, 220),
         check=(240, 205, 120), check2=(150, 90, 220),
-        cta=(200, 160, 70), cta_shadow=(20, 8, 36), cta_text="ADICIONAR AO MEU JOGO",
-        cta_buy="COMPRAR AGORA",
-        tag_fill=(240, 205, 120), tag_text=(30, 12, 50), tag="MODELO 3D",
+        cta=(200, 160, 70), cta_shadow=(20, 8, 36), cta_text="ADD TO MY GAME",
+        cta_buy="BUY NOW",
+        tag_fill=(240, 205, 120), tag_text=(30, 12, 50), tag="3D MODEL",
         stat_bg=(36, 16, 62), stat_v=(240, 225, 245), stat_k=(175, 155, 200),
         stat_div=(100, 60, 150),
         seal=(240, 205, 120), seal_text=(30, 12, 50), seal_mid=(150, 90, 220),
-        badge="PRONTO PRA USAR",
+        badge="READY TO USE",
         price_fill=(240, 205, 120), price_text=(30, 12, 50),
         price_old=(180, 160, 130), price_hole=(60, 24, 90),
         deco="crowns",
@@ -142,7 +142,7 @@ THEMES = {
 }
 
 
-# ---------------------------------------------------------------- utilidades
+# ---------------------------------------------------------------- utilities
 def ascii_text(s):
     s = unicodedata.normalize("NFKD", s or "")
     s = s.encode("ascii", "ignore").decode("ascii")
@@ -202,7 +202,7 @@ def drop_shadow(layer, blur=6, offset=(6, 7), opacity=90, pad=30):
     return out, pad
 
 
-# ---------------------------------------------------------------- fundo
+# ---------------------------------------------------------------- background
 def make_background(t):
     img = Image.new("RGBA", (W, H), (0, 0, 0, 0))
     d = ImageDraw.Draw(img)
@@ -234,13 +234,13 @@ def ray_burst(img, cx, cy, r, color, n=18):
 
 
 def draw_deco(img, t):
-    """Decoracao de fundo extra conforme o tema."""
+    """Extra background decoration per theme."""
     d = ImageDraw.Draw(img)
     rng = random.Random(5)
     kind = t["deco"]
 
     if kind == "blood":
-        # gotejas de sangue descendo do topo
+        # blood drips from the top
         for _ in range(14):
             x = rng.randrange(20, W - 20)
             top = rng.randrange(-10, 40)
@@ -251,21 +251,21 @@ def draw_deco(img, t):
             d.ellipse([(x - w / 2, top + ln - w / 2), (x + w / 2, top + ln + w / 2)],
                       fill=col)
     elif kind == "embers":
-        # brasas flutuando
+        # floating embers
         for _ in range(50):
             x, y = rng.randrange(0, W), rng.randrange(0, H)
             s = rng.randrange(1, 4)
             c = rng.choice([(255, 170, 60), (255, 120, 40), (200, 140, 255)])
             d.ellipse([(x - s, y - s), (x + s, y + s)], fill=(*c, 200))
     elif kind == "grid":
-        # grade cyber sutil
+        # subtle cyber grid
         gc = (0, 240, 255, 26)
         for gx in range(0, W, 48):
             d.line([(gx, 0), (gx, H)], fill=gc, width=1)
         for gy in range(0, H, 48):
             d.line([(0, gy), (W, gy)], fill=gc, width=1)
     elif kind == "leaves":
-        # folhinhas
+        # little leaves
         for _ in range(26):
             x, y = rng.randrange(10, W - 10), rng.randrange(10, H - 10)
             c = rng.choice([(70, 140, 70), (110, 170, 80), (170, 190, 90)])
@@ -274,7 +274,7 @@ def draw_deco(img, t):
                    for k in range(3)]
             d.polygon(pts + [(x, y)], fill=(*c, 190))
     elif kind == "crowns":
-        # brilhos/estrelas douradas
+        # golden sparkles/stars
         for _ in range(30):
             x, y = rng.randrange(10, W - 10), rng.randrange(10, H - 10)
             s = rng.randrange(3, 8)
@@ -315,7 +315,7 @@ def hero_panel(img, path, t):
             img.alpha_composite(halo, pos)
             img.alpha_composite(glow, pos)
         except Exception as exc:  # pragma: no cover
-            d.text((SIDE_W // 2, H // 2), ascii_text(f"erro: {exc}"),
+            d.text((SIDE_W // 2, H // 2), ascii_text(f"error: {exc}"),
                    font=load_font(14), fill=(255, 255, 255), anchor="mm")
     else:
         d.ellipse([(SIDE_W // 2 - 90, H // 2 - 90), (SIDE_W // 2 + 90, H // 2 + 90)],
@@ -331,7 +331,7 @@ def hero_panel(img, path, t):
     paste_center(img, tag, SIDE_W // 2 - 20, 46)
 
 
-# ---------------------------------------------------------------- conteudo
+# ---------------------------------------------------------------- content
 def draw_check(d, cx, cy, r, color, ink):
     d.ellipse([(cx - r, cy - r), (cx + r, cy + r)], fill=color, outline=ink, width=3)
     d.line([(cx - r * 0.45, cy + r * 0.02), (cx - r * 0.12, cy + r * 0.38),
@@ -464,9 +464,9 @@ def seal(img, cx, cy, lines, t, max_text_w=104):
 
 # ---------------------------------------------------------------- bbmodel
 def stats_from_bbmodel(path, estilo="Cute Lowpoly"):
-    """Le um .bbmodel e devolve (name, [info strings]) prontos pro card.
+    """Reads a .bbmodel and returns (name, [info strings]) ready for the card.
 
-    Infos: Altura (bounds Y / 16 = metros), Poligonos, Textura, Estilo.
+    Infos: Height (Y bounds / 16 = meters), Polygons, Texture, Style.
     """
     import json
     d = json.load(open(path, encoding="utf-8"))
@@ -480,15 +480,15 @@ def stats_from_bbmodel(path, estilo="Cute Lowpoly"):
         if e.get("type") == "cube":
             tris += 12
         else:
-            tris += max(1, len(e.get("faces", {}))) * 2
+            tris += max(1, len(e.get("faces", {})) * 2)
         f, t = e.get("from"), e.get("to")
         if f and t:
             ys += [f[1], t[1]]
     altura = (max(ys) - min(ys)) / 16.0 if ys else 0.0
 
-    infos = ["Altura: %.2fm" % altura]
+    infos = ["Height: %.2fm" % altura]
     if tris:
-        infos.append("Poligonos: %d" % tris)
+        infos.append("Polygons: %d" % tris)
 
     tex = d.get("textures", [])
     tw = th = 0
@@ -497,33 +497,33 @@ def stats_from_bbmodel(path, estilo="Cute Lowpoly"):
     if not (tw and th):
         res = d.get("resolution", {})
         tw, th = res.get("width", 0), res.get("height", 0)
-    infos.append("Textura: %dx%d" % (tw, th) if tw and th else "Textura: --")
-    infos.append("Estilo: %s" % estilo)
+    infos.append("Texture: %dx%d" % (tw, th) if tw and th else "Texture: --")
+    infos.append("Style: %s" % estilo)
     return name, infos
 
 
 # ---------------------------------------------------------------- main
 def main():
-    ap = argparse.ArgumentParser(description="Card de loja multi-tema v7 (PIL)")
+    ap = argparse.ArgumentParser(description="Multi-theme store card v7 (PIL)")
     ap.add_argument("--theme", default="casual", choices=sorted(THEMES.keys()),
-                    help="tema/vibe do card")
-    ap.add_argument("--name", default="NOME DO MODELO")
-    ap.add_argument("--desc", default="Descricao do modelo.")
+                    help="card theme/vibe")
+    ap.add_argument("--name", default="MODEL NAME")
+    ap.add_argument("--desc", default="Model description.")
     ap.add_argument("--preview", default=None)
     ap.add_argument("--out", default="/sdcard/TesteBbmodel/card_v7.png")
     ap.add_argument("--info", action="append", default=[])
     ap.add_argument("--model", default=None,
-                    help="caminho do .bbmodel — preenche nome e stats automatico")
+                    help="path to a .bbmodel — fills name and stats automatically")
     ap.add_argument("--estilo", default="Cute Lowpoly",
-                    help="texto do campo Estilo quando usar --model")
+                    help="text of the Style field when using --model")
     ap.add_argument("--badge", default=None,
-                    help="texto do selo (default vem do tema)")
+                    help="badge text (default comes from the theme)")
     ap.add_argument("--cta", default=None,
-                    help="texto do botao gratis (default vem do tema)")
+                    help="free button text (default comes from the theme)")
     ap.add_argument("--price", default=None,
-                    help="preco (ex: 'R$ 19,90'). Vazio = gratis")
+                    help="price (e.g. 'R$ 19,90'). Empty = free")
     ap.add_argument("--old-price", default=None, dest="old_price",
-                    help="preco antigo riscado")
+                    help="crossed-out old price")
     args = ap.parse_args()
 
     t = THEMES[args.theme]
@@ -531,15 +531,15 @@ def main():
     desc = ascii_text(args.desc)
     infos = [ascii_text(i) for i in args.info]
 
-    # --model: puxa nome + stats direto do .bbmodel (info explicita tem prioridade)
+    # --model: pull name + stats straight from the .bbmodel (explicit info takes priority)
     if args.model and os.path.exists(args.model):
         mname, minfos = stats_from_bbmodel(args.model, estilo=ascii_text(args.estilo))
-        if args.name == "NOME DO MODELO":
+        if args.name == "MODEL NAME":
             name = ascii_text(mname).upper()
         infos = [ascii_text(i) for i in minfos] + infos
 
     if not infos:
-        infos = ["Altura: --", "Poligonos: --", "Textura: --", "Estilo: --"]
+        infos = ["Height: --", "Polygons: --", "Texture: --", "Style: --"]
 
     canvas = Image.new("RGBA", (W, H), (0, 0, 0, 0))
     canvas.alpha_composite(make_background(t))
@@ -556,10 +556,10 @@ def main():
         else:
             checks.append(it)
     if not checks:
-        checks = ["Acabamento limpo", "Textura pronta", "Exporta em 1 clique",
-                  "Cabe em qualquer cena"]
-    filler = ["Textura ja aplicada", "Topologia limpa", "Pronto pra animar",
-              "Encaixa em qualquer cena", "Arquivo leve"]
+        checks = ["Clean finish", "Texture ready", "Exports in 1 click",
+                  "Fits in any scene"]
+    filler = ["Texture already applied", "Clean topology", "Ready to animate",
+              "Fits any scene", "Lightweight file"]
     while len(checks) < 4 and filler:
         checks.append(filler.pop(0))
 
@@ -578,12 +578,12 @@ def main():
         badge = ascii_text(args.badge) if args.badge else t["badge"]
         seal(canvas, SIDE_W - 52, H - 104,
              [(badge, 15, t["ink"]), ("100%", 26, t["seal_mid"]),
-              ("GRATIS", 15, t["ink"])], t)
+              ("FREE", 15, t["ink"])], t)
 
     out = canvas.convert("RGB")
     os.makedirs(os.path.dirname(args.out) or ".", exist_ok=True)
     out.save(args.out)
-    print("card salvo em", args.out)
+    print("card saved to", args.out)
 
 
 if __name__ == "__main__":

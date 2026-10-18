@@ -1,36 +1,36 @@
-# Workflow Blockbench (importar, editar, exportar)
+# Blockbench workflow (import, edit, export)
 
-## Abrir o projeto gerado
+## Opening the generated project
 
-1. Gere `link.txt` com `python3 bburl.py modelo.bbmodel --out link.txt --verify`.
-2. Abra o link no navegador → Blockbench web carrega o modelo como projeto novo (loadtype=json).
-3. Limite: ~1.5M chars de URL. Estourou? Salve o `.bbmodel` e abra via *File → Open model* (drag & drop no app desktop/web registro local).
+1. Generate `link.txt` with `python3 bburl.py model.bbmodel --out link.txt --verify`.
+2. Open the link in the browser → Blockbench web loads the model as a new project (loadtype=json).
+3. Limit: ~1.5M chars of URL. Exceeded it? Save the `.bbmodel` and open it via *File → Open model* (drag & drop in the desktop/web app with local registry).
 
-## Editar à mão e voltar pro código
+## Hand-editing and going back to code
 
-1. Ajuste no Blockbench (UV editor, paint mode, move/rotate).
-2. *File → Save Model* → `.bbmodel` de volta ao disco.
-3. No código: `m = Model.load("modelo.bbmodel")` — `m.uv_regions()` reflete o que está lá; **não** mexa em cubos sem passar `uv=` explícito ou `m.reset_alloc()` (ver pitfalls 7).
+1. Adjust in Blockbench (UV editor, paint mode, move/rotate).
+2. *File → Save Model* → `.bbmodel` back to disk.
+3. In code: `m = Model.load("model.bbmodel")` — `m.uv_regions()` reflects what's there; **do not** touch cubes without passing explicit `uv=` or calling `m.reset_alloc()` (see pitfalls 7).
 
-## Exportar do Blockbench (quando precisar do app)
+## Exporting from Blockbench (when you need the app)
 
-- **glTF/GLB**: *File → Export → Export GLTF*. O `bbglb.py` gera o mesmo alvo sem abrir o app — use-o por padrão; o do BB serve p/ conferência cruzada.
-- **OBJ**: bom p/ checar contagem de tris (o BB mostra a contagem também no rodapé).
+- **glTF/GLB**: *File → Export → Export GLTF*. `bbglb.py` generates the same target without opening the app — use it by default; BB's serves for cross-checking.
+- **OBJ**: good for checking tri count (BB also shows the count in the footer).
 
-## Rodar o GLB nas engines
+## Running the GLB in engines
 
-- **Godot 4**: jogue o `.glb` no projeto (import automático). Material vem com nearest → flag `Filter` no import; textura embutida. Se o modelo estiver "deitado", confira Y-up (nosso export é Y-up direto).
-- **three.js**: `GLTFLoader.load("asset.glb")` — o sampler NEAREST evita borrão; `alphaMode MASK` corta transparência duro (ideal pixel art).
-- **Unity/Unreal**: import padrão glTF; escala em unidades de modelagem (16u ≈ 1 bloco do Minecraft ≈ 1m no free).
+- **Godot 4**: drop the `.glb` into the project (auto-import). Material comes with nearest → set `Filter` on import; texture embedded. If the model looks "lying down", check Y-up (our export is Y-up direct).
+- **three.js**: `GLTFLoader.load("asset.glb")` — the NEAREST sampler avoids blur; `alphaMode MASK` cuts transparency hard (ideal for pixel art).
+- **Unity/Unreal**: standard glTF import; scale in modeling units (16u ≈ 1 Minecraft block ≈ 1m in free).
 
-## Compatibilidade de versão
+## Version compatibility
 
-- `format_version: "5.0"` — abre no Blockbench 4.10+ (estável atual). Versões 4.x antigas migram o outliner automaticamente.
-- `model_format: "free"` + `box_uv: false`: UV por face independente (o que pintamos). Se abrir como `java_block`, o BB reclama de coords fora do grid — use só p/ conversão explícita.
-- Texturas: o arquivo embute PNG base64; exportado para camera0/BlueMap etc. exige formato próprio (Bedrock/Java) — converta dentro do BB (Convert Project).
+- `format_version: "5.0"` — opens in Blockbench 4.10+ (current stable). Older 4.x versions migrate the outliner automatically.
+- `model_format: "free"` + `box_uv: false`: independent UV per face (what we paint). If opened as `java_block`, BB complains about coords outside the grid — use only for explicit conversion.
+- Textures: the file embeds a base64 PNG; exporting to Camera0/BlueMap etc. requires its own format (Bedrock/Java) — convert inside BB (Convert Project).
 
-## Cuidados
+## Cautions
 
-- Não regenere o `.bbmodel` com o Blockbench aberto segurando o arquivo antigo — salve/feche antes de rodar o build de novo.
-- O web app re-renderiza as faces desabilitadas "ressuscitadas" se virem com UV válido — nosso serializador grava `uv: [0,0,0,0]` + `texture: null` (correto).
-- `link.txt` não é estável entre gerações (textura base64 muda) — tudo bem, é descartável; o artefato canônico é o `.bbmodel`.
+- Don't regenerate the `.bbmodel` while Blockbench is open holding the old file — save/close before re-running the build.
+- The web app re-renders disabled faces "resurrected" if they come back with valid UV — our serializer writes `uv: [0,0,0,0]` + `texture: null` (correct).
+- `link.txt` is not stable across generations (base64 texture changes) — that's fine, it's disposable; the canonical artifact is the `.bbmodel`.

@@ -1,29 +1,29 @@
 #!/usr/bin/env python3
 """
-bbkit.py — kit de DETALHE FINO e MANIPULAÇÃO DIRETA para o blockbench-lowpoly.
+bbkit.py — kit for FINE DETAIL and DIRECT MANIPULATION for blockbench-lowpoly.
 
-Por que existe: modelar só com `Model.cube` grande dá "caixote". A distância até
-uma referência de qualidade vem de (a) formas com canto cortado/bevel, (b)
-detalhes pequenos (rebites, frisos, dentes, fivelas) e (c) conseguir colocar
-esses detalhes **sobre a face de outra peça** sem adivinhar coordenadas.
+Why it exists: modeling with only large `Model.cube` calls gives a "box". The
+distance to a quality reference comes from (a) shapes with cut corners/bevel,
+(b) small details (rivets, grooves, teeth, buckles) and (c) being able to place
+those details **on the face of another piece** without guessing coordinates.
 
-Primitivas:
+Primitives:
 
-    Formas (viram Mesh "free", 1 elemento, uv planar):
+    Shapes (become "free" Mesh, 1 element, planar UV):
         bevel_box  taper_box  wedge  pyramid  cylinder  sphere
 
-    Detalhe relativo a uma FACE (o coração do "manipulação direta"):
+    Detail relative to a FACE (the heart of "direct manipulation"):
         face_rect  on_face  grid_of  edge_trim
         FACE_BASIS: north/east/south/west/up/down
 
-    Simetria e cópias:
+    Symmetry and copies:
         duplicate  mirror_group
 
-    Pós-edição (edite o modelo carregado sem reescrever o build):
+    Post-editing (edit a loaded model without rewriting the build):
         translate  resize  set_extent  set_origin  rotate  remove  find  bounds
 
-Regra de UV: detalhe < 0.5u numa face de 1px fica ilegível. Construa as ilhas de
-detalhe com `Model(density=3)` (ou mais) — o resto do modelo pode ficar em 2.
+UV rule: detail < 0.5u on a 1px face is illegible. Build detail islands with
+`Model(density=3)` (or higher) — the rest of the model can stay at 2.
 """
 
 import copy
@@ -31,7 +31,7 @@ import math
 
 DIRECTIONS = ("north", "east", "south", "west", "up", "down")
 
-# face -> (normal, right(u+), up(v+))  — vetores unitários em espaço de mundo
+# face -> (normal, right(u+), up(v+))  — unit vectors in world space
 FACE_BASIS = {
     "north": ((0.0, 0.0, -1.0), (1.0, 0.0, 0.0), (0.0, 1.0, 0.0)),
     "east":  ((1.0, 0.0, 0.0), (0.0, 0.0, -1.0), (0.0, 1.0, 0.0)),
@@ -42,14 +42,14 @@ FACE_BASIS = {
 }
 
 
-# ---------------------------------------------------------------- utilidades
+# ---------------------------------------------------------------- utilities
 
 def find(model, name):
-    """Elemento (Cube/Mesh) pelo nome; levanta KeyError se não existir."""
+    """Element (Cube/Mesh) by name; raises KeyError if it doesn't exist."""
     for el in model.elements:
         if el.name == name:
             return el
-    raise KeyError(f"elemento {name!r} não existe no modelo")
+    raise KeyError(f"element {name!r} does not exist in the model")
 
 
 def _bounds(el):
@@ -61,12 +61,12 @@ def _bounds(el):
 
 
 def bounds(model, name):
-    """(frm, to) do elemento — inclusive de meshes."""
+    """(frm, to) of the element — including meshes."""
     return _bounds(find(model, name))
 
 
 def snap(v, step=0.25, mode="nearest"):
-    """Snapa um valor (ou tripla) numa grade. mode: nearest|min|max."""
+    """Snaps a value (or triple) to a grid. mode: nearest|min|max."""
     if step <= 0:
         return v
     fn = {"nearest": lambda x: round(x / step) * step,
@@ -81,10 +81,10 @@ def _round_pt(p, nd=6):
     return tuple(round(x, nd) for x in p)
 
 
-# --------------------------------------------------- detalhe relativo a face
+# --------------------------------------------------- detail relative to face
 
 def _face_point(frm, to, face, u, v):
-    """Mapeia (u,v) em fração 0..1 da face para um ponto em mundo."""
+    """Maps (u,v) in fraction 0..1 of the face to a world point."""
     n, r, up = FACE_BASIS[face]
     p = []
     for a in range(3):
@@ -100,14 +100,14 @@ def _face_point(frm, to, face, u, v):
 
 def face_rect(model, name, face, cu=0.5, cv=0.5, du=1.0, dv=1.0,
               depth=0.1, sink=0.02, grid=0.0):
-    """Retângulo (frm, to) de um bloco apoiado na face `face` do elemento `name`.
+    """Rectangle (frm, to) of a block resting on face `face` of element `name`.
 
-    cu/cv: centro em fração da face (0..1). du/dv: tamanho em fração.
-    depth: quanto AVANÇA para fora da face. sink: quanto penetra (evita z-fight).
-    grid: 0 = livre; ex. 0.25 = Coordinates snappadas na grade.
+    cu/cv: center as a fraction of the face (0..1). du/dv: size as a fraction.
+    depth: how far it PROTRUDES out of the face. sink: penetration (avoids z-fight).
+    grid: 0 = free; e.g. 0.25 = coordinates snapped to the grid.
     """
     if face not in FACE_BASIS:
-        raise ValueError(f"face inválida {face!r}; use {DIRECTIONS}")
+        raise ValueError(f"invalid face {face!r}; use {DIRECTIONS}")
     frm, to = _bounds(find(model, name))
     du = min(max(float(du), 1e-6), 1.0)
     dv = min(max(float(dv), 1e-6), 1.0)
@@ -138,7 +138,7 @@ def face_rect(model, name, face, cu=0.5, cv=0.5, du=1.0, dv=1.0,
             lo[i] = math.floor(lo[i] / grid) * grid
             hi[i] = math.ceil(hi[i] / grid) * grid
         else:
-            # nunca menor que 1 texel: detalhe sub-texel quebra a densidade de UV
+            # never smaller than 1 texel: sub-texel detail breaks UV density
             min_side = 1.0 / max(float(getattr(model, "density", 2) or 2), 0.01)
             if hi[i] - lo[i] < min_side:
                 ctr = (lo[i] + hi[i]) / 2
@@ -150,16 +150,13 @@ def face_rect(model, name, face, cu=0.5, cv=0.5, du=1.0, dv=1.0,
 
 
 def _default_faces(face):
-    """Detalhe fino só precisa da face que encosta + o topo (o resto é lixo de UV)."""
+    """Fine detail only needs the support face + top (the rest is UV junk)."""
     return [face] if face == "up" else [face, "up"]
 
 
 def on_face(model, name, parent, face, cu=0.5, cv=0.5, du=1.0, dv=1.0,
             depth=0.1, sink=0.02, grid=0.0, faces=None, **cube_kw):
-    """Cria um cubo apoiado na face de outro elemento (o 'detalhe pequeno').
-
-    faces=None → só a face de apoio + topo (economiza UV/tris; passe faces=[...] p/ tudo).
-    """
+    """Creates a cube resting on another element's face (the "small detail")."""
     frm, to = face_rect(model, parent, face, cu, cv, du, dv, depth, sink, grid)
     return model.cube(name, frm, to,
                       faces=faces if faces is not None else _default_faces(face),
@@ -168,7 +165,7 @@ def on_face(model, name, parent, face, cu=0.5, cv=0.5, du=1.0, dv=1.0,
 
 def grid_of(model, prefix, parent, face, nu=3, nv=2, du=0.6, dv=0.6,
             depth=0.1, sink=0.02, grid=0.0, span_u=0.8, span_v=0.8, **cube_kw):
-    """nu x nv blocos distribuídos na face (rebites, dentes, tijolos...)."""
+    """nu x nv blocks distributed over the face (rivets, teeth, bricks...)."""
     out = []
     k = 0
     for j in range(nv):
@@ -183,7 +180,7 @@ def grid_of(model, prefix, parent, face, nu=3, nv=2, du=0.6, dv=0.6,
 
 def edge_trim(model, prefix, parent, face, thickness=0.1, depth=0.06,
               sink=0.02, grid=0.0, sides=("top", "bottom", "left", "right"), **cube_kw):
-    """Frisos colados nas bordas da face (aro, cinto, moldura)."""
+    """Trims glued to the edges of the face (rim, belt, molding)."""
     out = []
     t = max(float(thickness), 0.0)
     rects = {
@@ -199,10 +196,10 @@ def edge_trim(model, prefix, parent, face, thickness=0.1, depth=0.06,
     return out
 
 
-# ------------------------------------------------------------------- cópias
+# ------------------------------------------------------------------- copies
 
 def duplicate(model, name, new_name, offset=(0.0, 0.0, 0.0), group=None):
-    """Clona um Cube/Mesh (com UVs) deslocado por `offset`."""
+    """Clones a Cube/Mesh (with UVs) shifted by `offset`."""
     el = find(model, name)
     off = [float(o) for o in offset]
     if hasattr(el, "frm"):
@@ -210,8 +207,8 @@ def duplicate(model, name, new_name, offset=(0.0, 0.0, 0.0), group=None):
         to = [el.to[i] + off[i] for i in range(3)]
         origin = [el.origin[i] + off[i] for i in range(3)]
         new = type(el)(new_name, frm, to, origin, list(el.rotation),
-                      float(el.inflate), bool(getattr(el, "mirror_uv", False)),
-                      getattr(el, "color", None))
+                       float(el.inflate), bool(getattr(el, "mirror_uv", False)),
+                       getattr(el, "color", None))
         new.faces = {d: fs.clone() for d, fs in el.faces.items()}
     else:
         origin = [el.origin[i] + off[i] for i in range(3)]
@@ -223,8 +220,8 @@ def duplicate(model, name, new_name, offset=(0.0, 0.0, 0.0), group=None):
     return new
 
 
-def mirror_group(model, names, axis=0, center=0.0, suffix="_esp", group=None):
-    """Clona `names` espelhados em relação a `axis`/`center` (simetria barata)."""
+def mirror_group(model, names, axis=0, center=0.0, suffix="_mir", group=None):
+    """Clones `names` mirrored around `axis`/`center` (cheap symmetry)."""
     out = []
     for n in names:
         dup = duplicate(model, n, f"{n}{suffix}", group=group)
@@ -233,10 +230,10 @@ def mirror_group(model, names, axis=0, center=0.0, suffix="_esp", group=None):
     return out
 
 
-# ---------------------------------------------------------------- pós-edição
+# ---------------------------------------------------------------- post-editing
 
 def translate(model, name, d=(0.0, 0.0, 0.0)):
-    """Move o elemento (e reancora o origin junto)."""
+    """Moves the element (and re-anchors the origin along with it)."""
     el = find(model, name)
     d = [float(x) for x in d]
     if hasattr(el, "frm"):
@@ -249,7 +246,7 @@ def translate(model, name, d=(0.0, 0.0, 0.0)):
 
 
 def resize(model, name, axis, size, anchor="min"):
-    """Define o tamanho no eixo (anchor: min|max|center) mantendo a outra ponta."""
+    """Sets the size on the axis (anchor: min|max|center) keeping the other end."""
     el = find(model, name)
     frm, to = _bounds(el)
     size = abs(float(size))
@@ -264,7 +261,7 @@ def resize(model, name, axis, size, anchor="min"):
 
 
 def set_extent(model, name, axis, value, end="to"):
-    """Snapa a borda (to|frm) do eixo na coordenada dada."""
+    """Snaps the edge (to|frm) of the axis to the given coordinate."""
     el = find(model, name)
     frm, to = _bounds(el)
     v = float(value)
@@ -281,10 +278,10 @@ def set_extent(model, name, axis, value, end="to"):
 
 def _set_box(model, el, frm, to):
     if frm[0] > to[0] or frm[1] > to[1] or frm[2] > to[2]:
-        raise ValueError(f"{el.name}: from < to obrigatório (recebido {frm} -> {to})")
+        raise ValueError(f"{el.name}: from < to required (received {frm} -> {to})")
     if hasattr(el, "frm"):
         el.frm, el.to = _round_pt(frm), _round_pt(to)
-    else:  # mesh: remapeia o bbox por affine (vértices são relativos ao origin)
+    else:  # mesh: remap the bbox by affine (vertices are relative to the origin)
         old_f, old_t = _bounds(el)
         scale, shift = [], []
         for i in range(3):
@@ -298,21 +295,21 @@ def _set_box(model, el, frm, to):
 
 
 def set_origin(model, name, p):
-    """Move só o pivô (rotação passa a girar em torno de p)."""
+    """Moves only the pivot (rotation now spins around p)."""
     el = find(model, name)
     el.origin = _round_pt([float(x) for x in p])
     return el
 
 
 def rotate(model, name, d=(0.0, 0.0, 0.0)):
-    """Soma graus em X/Y/Z (mesma ordem ZYX do Blockbench)."""
+    """Adds degrees on X/Y/Z (same ZYX order as Blockbench)."""
     el = find(model, name)
     el.rotation = [round(el.rotation[i] + float(d[i]), 6) for i in range(3)]
     return el
 
 
 def remove(model, name):
-    """Remove elemento (cube ou mesh) do modelo."""
+    """Removes an element (cube or mesh) from the model."""
     el = find(model, name)
     model.elements = [e for e in model.elements if e is not el]
     for g in model.groups:
@@ -321,12 +318,12 @@ def remove(model, name):
     return el
 
 
-# -------------------------------------------------------------------- formas
-# Helpers de malha: normais por Newell (independe da ordem), ordenação angular
-# dos vértices (polígono convexo) e orientação para fora pelo centro do volume.
+# -------------------------------------------------------------------- shapes
+# Mesh helpers: normals via Newell (order-independent), angular sorting of
+# vertices (convex polygon) and outward orientation by the volume center.
 
 def _plane_normal(pts):
-    """Normal do plano por QUALQUER tripla não-colinear (polígono convexo e planar)."""
+    """Plane normal from ANY non-collinear triple (convex planar polygon)."""
     n = len(pts)
     for i in range(n):
         for j in range(i + 1, n):
@@ -356,16 +353,16 @@ def _cross(a, b):
 
 
 def _poly(idxs, verts, center):
-    """Ordena os índices em polígono convexo e garante normal para fora.
+    """Sorts the indices into a convex polygon and ensures an outward normal.
 
-    NÃO pode depender da ordem de entrada: achamos o plano por uma tripla, ordenamos
-    por ângulo em torno do centro e só então orientamos para fora.
+    Must NOT depend on input order: find the plane from a triple, sort by angle
+    around the center, and only then orient outward.
     """
     pts = [verts[i] for i in idxs]
     c = [sum(p[i] for p in pts) / len(pts) for i in range(3)]
     n = _plane_normal(pts)
     if n is None:
-        return idxs  # degenerada de verdade: deixa o bbcheck reportar
+        return idxs  # truly degenerate: let bbcheck report it
     t, b = _basis(n)
     order = sorted(range(len(pts)),
                    key=lambda k: math.atan2(sum((pts[k][i] - c[i]) * b[i] for i in range(3)),
@@ -381,9 +378,9 @@ def _box_center(frm, to):
 
 
 def bevel_box(model, name, frm, to, bevel=0.2, group=None, uv="planar", **kw):
-    """Caixa com todas as 12 arestas chanfradas a 45° (6 octógonos + 12 quads + 8 tris).
+    """Box with all 12 edges chamfered at 45° (6 octagons + 12 quads + 8 tris).
 
-    É o truque de maior retorno: tira o visual "caixote" sem sair de low poly.
+    Highest-return trick: removes the "box" look without leaving low poly.
     """
     frm = [float(x) for x in frm]
     to = [float(x) for x in to]
@@ -391,7 +388,7 @@ def bevel_box(model, name, frm, to, bevel=0.2, group=None, uv="planar", **kw):
     span = [to[i] - frm[i] for i in range(3)]
     b = min([b] + [s / 2.5 for s in span])
     if b <= 0:
-        raise ValueError("bevel precisa ser > 0 e <= 1/2.5 da menor aresta")
+        raise ValueError("bevel must be > 0 and <= 1/2.5 of the smallest edge")
     verts, tags = [], []
     for ci in range(8):
         c = [(ci >> k) & 1 for k in range(3)]
@@ -428,7 +425,7 @@ def bevel_box(model, name, frm, to, bevel=0.2, group=None, uv="planar", **kw):
 
 def taper_box(model, name, frm, to, shrink=(0.5, 0.5), offset=(0.0, 0.0), group=None,
               uv="planar", **kw):
-    """Caixa cônica: topo menor (shrink em fração por eixo X/Z) e deslocado."""
+    """Tapered box: smaller top (shrink as a fraction per X/Z axis) and offset."""
     frm = [float(x) for x in frm]
     to = [float(x) for x in to]
     sx = to[0] - frm[0]
@@ -451,10 +448,10 @@ def taper_box(model, name, frm, to, shrink=(0.5, 0.5), offset=(0.0, 0.0), group=
 
 
 def wedge(model, name, frm, to, axis=0, group=None, uv="planar", **kw):
-    """Rampa: prisma triangular. O topo cai até a base na ponta `max` do eixo.
+    """Ramp: triangular prism. The top drops to the base at the `max` end of the axis.
 
-    axis: 0 = desce em X, 2 = desce em Z (a altura é sempre Y).
-    Use para telhados, bicos de casco, rampas de calha, pés que afinam.
+    axis: 0 = drops along X, 2 = drops along Z (height is always Y).
+    Use for roofs, hull noses, chute ramps, tapering feet.
     """
     frm = [float(x) for x in frm]
     to = [float(x) for x in to]
@@ -467,7 +464,7 @@ def wedge(model, name, frm, to, axis=0, group=None, uv="planar", **kw):
                  _round_pt([to[0], to[1], frm[2]]), _round_pt([to[0], frm[1], frm[2]]),
                  _round_pt([frm[0], frm[1], to[2]]), _round_pt([to[0], frm[1], to[2]])]
     else:
-        raise ValueError("wedge: axis deve ser 0 (desce em X) ou 2 (desce em Z)")
+        raise ValueError("wedge: axis must be 0 (drops along X) or 2 (drops along Z)")
     tris = [[0, 1, 4], [2, 3, 5]]
     faces = [[0, 1, 2, 3], [0, 3, 5, 4], [1, 2, 5, 4]] + tris
     center = [0.0, (frm[1] + to[1]) / 2, 0.0]
@@ -476,7 +473,7 @@ def wedge(model, name, frm, to, axis=0, group=None, uv="planar", **kw):
 
 
 def pyramid(model, name, frm, to, apex=None, group=None, uv="planar", **kw):
-    """Piramide base retangular com ápice (default: centro da face superior)."""
+    """Rectangular-base pyramid with apex (default: center of the top face)."""
     frm = [float(x) for x in frm]
     to = [float(x) for x in to]
     apex = apex or [(frm[0] + to[0]) / 2, to[1], (frm[2] + to[2]) / 2]
@@ -490,7 +487,7 @@ def pyramid(model, name, frm, to, apex=None, group=None, uv="planar", **kw):
 
 def cylinder(model, name, center, radius, height, sides=8, axis=1, group=None,
              uv="planar", **kw):
-    """Cilindro low poly (n lados), tampas em n-gon. axis: 0=X, 1=Y, 2=Z."""
+    """Low-poly cylinder (n sides), n-gon caps. axis: 0=X, 1=Y, 2=Z."""
     n = max(3, int(sides))
     cx, cy, cz = [float(c) for c in center]
     r, h = float(radius), float(height)
@@ -518,7 +515,7 @@ def cylinder(model, name, center, radius, height, sides=8, axis=1, group=None,
 
 
 def sphere(model, name, center, radius, rings=4, sides=8, group=None, uv="planar", **kw):
-    """Esfera low poly (lat×long). Boa para olhos, domos, cabeça arredondada."""
+    """Low-poly sphere (lat×long). Good for eyes, domes, rounded heads."""
     rows = max(2, int(rings))
     cols = max(3, int(sides))
     cx, cy, cz = [float(c) for c in center]
@@ -559,29 +556,29 @@ def _smoke_test():
     import bbcheck
     import bbmodel
 
-    # detalhe denso: textura maior + density 3 (senão a UV estoura)
+    # dense detail: larger texture + density 3 (otherwise UV overflows)
     m = bbmodel.Model("kit_smoke", tex_w=256, tex_h=256, density=3)
-    g = m.group("corpo", origin=(8, 0, 8))
-    m.cube("caixa", (4, 0, 4), (12, 6, 12), group=g)
-    bevel_box(m, "tampa", (3.5, 6, 3.5), (12.5, 8, 12.5), bevel=0.5, group=g)
-    taper_box(m, "torre", (6, 8, 6), (10, 14, 10), shrink=(0.6, 0.6), group=g)
-    pyramid(m, "ponta", (6, 14, 6), (10, 18, 10), group=g)
-    grid_of(m, "rebite", "caixa", "north", nu=3, nv=2, du=0.25, dv=0.25, group=g)
-    edge_trim(m, "aro", "caixa", "up", thickness=0.12, group=g, sides=("top", "bottom"))
-    cylinder(m, "cano", (8, 8, 13), 1.2, 4, sides=6, axis=2, group=g)
-    sphere(m, "olho", (6, 12, 5), 1.0, rings=4, sides=6, group=g)
-    wedge(m, "rampa", (12, 0, 4), (18, 4, 10), axis=0, group=g)
-    wedge(m, "telhado", (12, 0, 12), (18, 4, 18), axis=2, group=g)
-    duplicate(m, "rebite_0", "rebite_0_lado", offset=(8, 0, 0), group=g)
-    mirror_group(m, ["rebite_0", "rebite_1"], axis=0, center=8, group=g)
-    translate(m, "rampa", (0, 0, -1))
-    rotate(m, "cano", (0, 0, 15))
-    set_origin(m, "cano", (8, 10, 13))
-    resize(m, "tampa", 1, 3.0, anchor="min")
+    g = m.group("body", origin=(8, 0, 8))
+    m.cube("box", (4, 0, 4), (12, 6, 12), group=g)
+    bevel_box(m, "lid", (3.5, 6, 3.5), (12.5, 8, 12.5), bevel=0.5, group=g)
+    taper_box(m, "tower", (6, 8, 6), (10, 14, 10), shrink=(0.6, 0.6), group=g)
+    pyramid(m, "tip", (6, 14, 6), (10, 18, 10), group=g)
+    grid_of(m, "rivet", "box", "north", nu=3, nv=2, du=0.25, dv=0.25, group=g)
+    edge_trim(m, "rim", "box", "up", thickness=0.12, group=g, sides=("top", "bottom"))
+    cylinder(m, "barrel", (8, 8, 13), 1.2, 4, sides=6, axis=2, group=g)
+    sphere(m, "eye", (6, 12, 5), 1.0, rings=4, sides=6, group=g)
+    wedge(m, "ramp", (12, 0, 4), (18, 4, 10), axis=0, group=g)
+    wedge(m, "roof", (12, 0, 12), (18, 4, 18), axis=2, group=g)
+    duplicate(m, "rivet_0", "rivet_0_side", offset=(8, 0, 0), group=g)
+    mirror_group(m, ["rivet_0", "rivet_1"], axis=0, center=8, group=g)
+    translate(m, "ramp", (0, 0, -1))
+    rotate(m, "barrel", (0, 0, 15))
+    set_origin(m, "barrel", (8, 10, 13))
+    resize(m, "lid", 1, 3.0, anchor="min")
 
     st = m.stats()
     assert st["elements"] >= 12, st
-    # shapes são meshes coerentes: sem face degenerada, normais externas
+    # shapes are coherent meshes: no degenerate face, outward normals
     for el in m.elements:
         if hasattr(el, "frm"):
             assert all(el.frm[i] < el.to[i] for i in range(3)), el.name

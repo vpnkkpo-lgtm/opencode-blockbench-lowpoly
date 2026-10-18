@@ -1,24 +1,24 @@
 #!/usr/bin/env python3
 """
-bbcheck.py — validador de arquivos .bbmodel (formato 5.0, tolerante a 4.x).
+bbcheck.py — validator for .bbmodel files (format 5.0, tolerant to 4.x).
 
-Checa invariantes que quebram no Blockbench ou no motor de jogo:
-uuids, outliner, refs de textura, UVs fora dos limites, faces degeneradas,
-stretch de texel, meshes não-planos/virados, e lint de estilo
-(preto/branco puro, paleta grande demais) com --style.
+Checks invariants that break in Blockbench or in the game engine:
+uuids, outliner, texture refs, UVs out of bounds, degenerate faces,
+texel stretch, non-planar/flipped meshes, and style lint
+(pure black/white, too-large palette) with --style.
 
-O lint vale para QUALQUER estilo (cute, terror, sombrio, realista):
-preto/branco puros reprovam em todos — sombra tem matiz, luz tem matiz.
+The lint applies to ANY style (cute, horror, dark, realistic):
+pure black/white fail in all of them — shadow has hue, light has hue.
 
-`--detail` mede FIDELIDADE (o gap entre "blockout de caixas" e uma referência):
-peça fina demais ausente, tudo alinhado aos eixos, nenhuma forma com bevel.
+`--detail` measures FIDELITY (the gap between "box blockout" and a reference):
+missing thin piece, everything axis-aligned, no beveled shape.
 
-Uso:
-    python3 bbcheck.py modelo.bbmodel [--style] [--detail] [--type mob|prop|veiculo|diorama]
-                                  [--tex textura.png]
+Usage:
+    python3 bbcheck.py model.bbmodel [--style] [--detail] [--type mob|prop|vehicle|diorama]
+                                  [--tex texture.png]
 
-Saída: linhas [E]/[W]/[I] e resumo. Exit code 1 se houver erro.
-Uso como módulo:
+Output: [E]/[W]/[I] lines and a summary. Exit code 1 if there is an error.
+Module usage:
     from bbcheck import check
     r = check("m.bbmodel", style=True)
     assert not r["errors"]
@@ -64,7 +64,7 @@ class Report:
         for level, items in (("E", self.errors), ("W", self.warnings), ("I", self.infos)):
             for code, msg in items:
                 print(f"[{level}] {code}: {msg}")
-        c = f"{len(self.errors)} erro(s), {len(self.warnings)} aviso(s), {len(self.infos)} info(s)"
+        c = f"{len(self.errors)} error(s), {len(self.warnings)} warning(s), {len(self.infos)} info(s)"
         print(c)
         return self.ok
 
@@ -78,20 +78,20 @@ def _num(v):
 
 
 DETAIL_TYPES = {
-    # tipo: (fracção p/ "micro", fracção p/ "sem peça fina", alerta de alinhamento)
+    # type: (fraction for "micro", fraction for "no thin piece", alignment alert)
     "mob": (0.20, 0.05, 0.85),
-    "personagem": (0.20, 0.05, 0.85),
+    "character": (0.20, 0.05, 0.85),
     "prop": (0.30, 0.10, 1.01),
-    "veiculo": (0.15, 0.06, 0.90),
+    "vehicle": (0.15, 0.06, 0.90),
     "diorama": (0.25, 0.08, 0.95),
 }
 
 
-def _detail_lint(rep, elements, tipo="padrao"):
-    """Fidelidade: detalhe fino presente, silhueta com rotação, formas com bevel.
+def _detail_lint(rep, elements, tipo="default"):
+    """Fidelity: thin detail present, silhouette with rotation, shapes with bevel.
 
-    tipo = mob|prop|veiculo|diorama calibra os limiares; "padrao" usa os valores
-    genéricos (micro ≤25% da maior dimensão, sem peça fina >8%).
+    tipo = mob|prop|vehicle|diorama calibrates thresholds; "default" uses the
+    generic values (micro ≤25% of the largest dimension, no thin piece >8%).
     """
     micro, min_frac, align_max = DETAIL_TYPES.get(tipo, (0.25, 0.08, 1.01))
     dims = []
@@ -117,21 +117,21 @@ def _detail_lint(rep, elements, tipo="padrao"):
     min_edge = min(d[1] for d in dims)
     fine = [n for (n, mn, mx) in dims if mn <= micro * scale]
     if min_edge > min_frac * scale:
-        rep.W("detail", f"[{tipo}] nenhuma peça pequena: menor aresta {min_edge:.2f}u = "
-                        f"{100 * min_edge / scale:.0f}% da maior dimensão ({scale:.1f}u); "
-                        f"micro deve ser ≤{100 * micro:.0f}% — use bbkit.on_face/grid_of")
+        rep.W("detail", f"[{tipo}] no small piece: smallest edge {min_edge:.2f}u = "
+                        f"{100 * min_edge / scale:.0f}% of the largest dimension ({scale:.1f}u); "
+                        f"micro must be ≤{100 * micro:.0f}% — use bbkit.on_face/grid_of")
     else:
-        rep.I("detail", f"[{tipo}] {len(fine)} peças de detalhe (≤{100 * micro:.0f}%); "
-                        f"menor aresta {min_edge:.2f}u em escala {scale:.1f}u")
+        rep.I("detail", f"[{tipo}] {len(fine)} detail pieces (≤{100 * micro:.0f}%); "
+                        f"smallest edge {min_edge:.2f}u at scale {scale:.1f}u")
     if total >= 5 and aligned / total >= align_max:
-        rep.W("detail", f"[{tipo}] {aligned}/{total} cubos alinhados aos eixos — silhueta "
-                        f"genérica; incline peça-chave (5-15°) ou use bbkit.bevel_box/taper_box")
+        rep.W("detail", f"[{tipo}] {aligned}/{total} cubes axis-aligned — generic "
+                        f"silhouette; tilt a key piece (5-15°) or use bbkit.bevel_box/taper_box")
     if meshes == 0 and total >= 5:
-        rep.W("detail", f"[{tipo}] nenhuma forma com bevel/taper/cilindro — 100% caixas "
-                        f"retas lê como blockout (bbkit.bevel_box mata esse ar)")
+        rep.W("detail", f"[{tipo}] no beveled/tapered/cylinder shape — 100% straight "
+                        f"boxes read as blockout (bbkit.bevel_box fixes that)")
 
 
-def check(path_or_dict, style=False, tex_override=None, detail=False, tipo="padrao"):
+def check(path_or_dict, style=False, tex_override=None, detail=False, tipo="default"):
     rep = Report()
     if isinstance(path_or_dict, dict):
         model = path_or_dict
@@ -142,33 +142,33 @@ def check(path_or_dict, style=False, tex_override=None, detail=False, tipo="padr
             try:
                 model = json.load(fh)
             except json.JSONDecodeError as exc:
-                rep.E("json", f"JSON inválido: {exc}")
+                rep.E("json", f"invalid JSON: {exc}")
                 return {"errors": rep.errors, "warnings": rep.warnings, "infos": rep.infos, "report": rep}
 
     meta = model.get("meta") or {}
     fv = str(meta.get("format_version", "?"))
     fmt = meta.get("model_format", "free")
     if fv == "?":
-        rep.W("meta", "sem meta.format_version (Blockbench assume antigo e pode migrar errado)")
+        rep.W("meta", "no meta.format_version (Blockbench assumes old and may migrate wrong)")
     if fmt not in KNOWN_FORMATS:
-        rep.W("meta", f"model_format {fmt!r} desconhecido")
+        rep.W("meta", f"unknown model_format {fmt!r}")
 
     tex_w = tex_h = None
     res = model.get("resolution")
     if isinstance(res, dict):
         tex_w, tex_h = res.get("width"), res.get("height")
     elif model.get("textures"):
-        rep.W("resolution", "sem resolution{width,height} com texturas presentes")
+        rep.W("resolution", "no resolution{width,height} with textures present")
 
-    # --- texturas -----------------------------------------------------------
+    # --- textures -----------------------------------------------------------
     textures = model.get("textures") or []
     tex_pngs = {}
     for i, t in enumerate(textures):
         if not isinstance(t, dict):
-            rep.E("tex", f"textures[{i}] não é objeto")
+            rep.E("tex", f"textures[{i}] is not an object")
             continue
         if not isinstance(t.get("id"), str):
-            rep.W("tex", f"textures[{i}].id deveria ser string, veio {t.get('id')!r}")
+            rep.W("tex", f"textures[{i}].id should be a string, got {t.get('id')!r}")
         src = t.get("source") or ""
         if src.startswith("data:image/png;base64,"):
             try:
@@ -176,30 +176,30 @@ def check(path_or_dict, style=False, tex_override=None, detail=False, tipo="padr
                 dec = bbtex.decode_png(png)
                 tex_pngs[i] = dec
                 if tex_w and tex_h and (dec["width"] != tex_w or dec["height"] != tex_h):
-                    rep.W("tex", f"textures[{i}] é {dec['width']}x{dec['height']} "
-                                 f"mas resolution é {tex_w}x{tex_h}")
+                    rep.W("tex", f"textures[{i}] is {dec['width']}x{dec['height']} "
+                                 f"but resolution is {tex_w}x{tex_h}")
             except Exception as exc:
-                rep.E("tex", f"textures[{i}].source não decodifica como PNG: {exc}")
+                rep.E("tex", f"textures[{i}].source does not decode as PNG: {exc}")
         elif src:
-            rep.W("tex", f"textures[{i}].source é caminho externo (não portátil); embuta em base64")
+            rep.W("tex", f"textures[{i}].source is an external path (not portable); embed as base64")
         else:
-            rep.W("tex", f"textures[{i}] sem source")
+            rep.W("tex", f"textures[{i}] has no source")
 
-    # --- elementos ----------------------------------------------------------
+    # --- elements ----------------------------------------------------------
     elements = model.get("elements") or model.get("cubes") or []
     by_uuid = {}
     for i, el in enumerate(elements):
         if not isinstance(el, dict):
-            rep.E("el", f"elements[{i}] não é objeto")
+            rep.E("el", f"elements[{i}] is not an object")
             continue
         u = el.get("uuid")
         label = el.get("name") or f"elements[{i}]"
         if not u:
-            rep.E("uuid", f"{label}: sem uuid")
+            rep.E("uuid", f"{label}: no uuid")
         elif not UUID_RE.match(str(u)):
-            rep.W("uuid", f"{label}: uuid fora do padrão: {u}")
+            rep.W("uuid", f"{label}: uuid outside the standard: {u}")
         elif u in by_uuid:
-            rep.E("uuid", f"uuid duplicado em {label} e {by_uuid[u]}")
+            rep.E("uuid", f"duplicate uuid in {label} and {by_uuid[u]}")
         by_uuid[u] = label
 
         etype = el.get("type", "cube")
@@ -208,7 +208,7 @@ def check(path_or_dict, style=False, tex_override=None, detail=False, tipo="padr
         elif etype == "mesh":
             _check_mesh(rep, el, label, tex_w, tex_h, len(textures))
         else:
-            rep.I("el", f"{label}: tipo {etype!r} ignorado pelo validador")
+            rep.I("el", f"{label}: type {etype!r} ignored by the validator")
 
     # --- groups / outliner --------------------------------------------------
     groups = model.get("groups") or []
@@ -216,51 +216,51 @@ def check(path_or_dict, style=False, tex_override=None, detail=False, tipo="padr
     for i, g in enumerate(groups):
         u = g.get("uuid")
         if not u:
-            rep.E("group", f"groups[{i}] ({g.get('name')!r}) sem uuid")
+            rep.E("group", f"groups[{i}] ({g.get('name')!r}) has no uuid")
         elif not UUID_RE.match(str(u)):
-            rep.W("uuid", f"grupo {g.get('name')!r}: uuid fora do padrão")
+            rep.W("uuid", f"group {g.get('name')!r}: uuid outside the standard")
         else:
             group_uuids.add(u)
         if "children" in g:
-            rep.W("group", f"grupo {g.get('name')!r} tem children em groups[] "
-                           f"(formato 5.0 separa outliner; children vai no outliner)")
+            rep.W("group", f"group {g.get('name')!r} has children in groups[] "
+                           f"(format 5.0 separates the outliner; children go in the outliner)")
 
     outliner = model.get("outliner") or []
     referenced = set()
 
     def walk_outliner(node, depth=0):
         if depth > 16:
-            rep.E("outliner", "profundidade > 16 (provável ciclo)")
+            rep.E("outliner", "depth > 16 (likely cycle)")
             return
         if isinstance(node, str):
             referenced.add(node)
             if node not in by_uuid and node not in group_uuids:
-                rep.E("outliner", f"outliner referencia uuid inexistente: {node}")
+                rep.E("outliner", f"outliner references non-existent uuid: {node}")
         elif isinstance(node, dict):
             u = node.get("uuid")
             referenced.add(u)
             if u not in group_uuids:
-                rep.E("outliner", f"nó de grupo com uuid {u} não está em groups[]")
+                rep.E("outliner", f"group node with uuid {u} is not in groups[]")
             if "name" in node:
-                rep.W("outliner", f"nó de grupo {u} repete 'name' (redundante no 5.0)")
+                rep.W("outliner", f"group node {u} repeats 'name' (redundant in 5.0)")
             for c in node.get("children") or []:
                 walk_outliner(c, depth + 1)
         else:
-            rep.E("outliner", f"nó inválido: {node!r}")
+            rep.E("outliner", f"invalid node: {node!r}")
 
     for node in outliner:
         walk_outliner(node)
 
     for u, label in by_uuid.items():
         if u not in referenced:
-            rep.W("outliner", f"elemento {label} existe mas não está no outliner (invisível no BB)")
+            rep.W("outliner", f"element {label} exists but is not in the outliner (invisible in BB)")
 
-    # --- estilo -------------------------------------------------------------
+    # --- style --------------------------------------------------------------
     tri_count = _tri_count(elements)
     if tri_count > CHAR_TRI_BUDGET:
-        rep.W("budget", f"{tri_count} triângulos — acima do teto de personagem ({CHAR_TRI_BUDGET})")
+        rep.W("budget", f"{tri_count} triangles — above the character ceiling ({CHAR_TRI_BUDGET})")
     elif tri_count > PROP_TRI_BUDGET:
-        rep.I("budget", f"{tri_count} triângulos — ok para personagem, alto para prop")
+        rep.I("budget", f"{tri_count} triangles — ok for character, high for prop")
 
     if style:
         _style_lint(rep, elements, tex_pngs, tex_override, tex_w, tex_h, fv)
@@ -277,54 +277,54 @@ def check(path_or_dict, style=False, tex_override=None, detail=False, tipo="padr
 def _check_cube(rep, el, label, tex_w, tex_h, n_tex, textures, fmt):
     for key in ("from", "to"):
         if not _num3(el.get(key)):
-            rep.E("cube", f"{label}: campo '{key}' deve ser [x,y,z] numérico, veio {el.get(key)!r}")
+            rep.E("cube", f"{label}: field '{key}' must be numeric [x,y,z], got {el.get(key)!r}")
     if _num3(el.get("from")) and _num3(el.get("to")):
         frm, to = el["from"], el["to"]
         for ax in range(3):
             if frm[ax] == to[ax]:
-                rep.E("cube", f"{label}: espessura ZERO no eixo {'xyz'[ax]} — face invisível/degenerada")
+                rep.E("cube", f"{label}: ZERO thickness on axis {'xyz'[ax]} — invisible/degenerate face")
             elif abs(to[ax] - frm[ax]) > 8:
-                rep.I("cube", f"{label}: {abs(to[ax]-frm[ax]):g} unidades no eixo {'xyz'[ax]} é bem grande")
+                rep.I("cube", f"{label}: {abs(to[ax]-frm[ax]):g} units on axis {'xyz'[ax]} is quite large")
             if to[ax] < frm[ax]:
-                rep.W("cube", f"{label}: tamanho negativo no eixo {'xyz'[ax]} (from>to) — confuso, prefira inverter")
+                rep.W("cube", f"{label}: negative size on axis {'xyz'[ax]} (from>to) — confusing, prefer inverting")
         if fmt == "java_block":
             for v in list(frm) + list(to):
                 if v != int(v):
-                    rep.E("cube", f"{label}: java_block exige coordenadas inteiras ({v})")
+                    rep.E("cube", f"{label}: java_block requires integer coordinates ({v})")
                 elif not (-16 <= v <= 32):
-                    rep.W("cube", f"{label}: {v} fora do range clássico -16..32 de java_block")
+                    rep.W("cube", f"{label}: {v} outside the classic java_block range -16..32")
     if el.get("origin") is not None and not _num3(el.get("origin")):
-        rep.E("cube", f"{label}: origin deve ser [x,y,z]")
+        rep.E("cube", f"{label}: origin must be [x,y,z]")
     if el.get("rotation") is not None and not _num3(el.get("rotation")):
-        rep.E("cube", f"{label}: rotation deve ser [x,y,z] em graus")
+        rep.E("cube", f"{label}: rotation must be [x,y,z] in degrees")
 
     faces = el.get("faces")
     if not isinstance(faces, dict):
-        rep.E("cube", f"{label}: sem faces")
+        rep.E("cube", f"{label}: no faces")
         return
     for missing in KNOWN_FACES - set(faces):
-        rep.W("cube", f"{label}: face {missing} ausente (Blockbench desenha como se fosse null)")
+        rep.W("cube", f"{label}: face {missing} missing (Blockbench draws it as null)")
     for fkey, f in faces.items():
         where = f"{label}.{fkey}"
         if fkey not in KNOWN_FACES:
-            rep.W("cube", f"{where}: nome de face desconhecido")
+            rep.W("cube", f"{where}: unknown face name")
             continue
         if not isinstance(f, dict):
-            rep.E("cube", f"{where}: não é objeto")
+            rep.E("cube", f"{where}: not an object")
             continue
         uv = f.get("uv")
         if uv is not None:
             if not (isinstance(uv, list) and len(uv) == 4 and all(_num(x) for x in uv)):
-                rep.E("cube", f"{where}: uv deve ser [u1,v1,u2,v2] numérico, veio {uv!r}")
+                rep.E("cube", f"{where}: uv must be numeric [u1,v1,u2,v2], got {uv!r}")
             else:
                 u1, v1, u2, v2 = uv
                 if u1 == u2 or v1 == v2:
-                    rep.E("cube", f"{where}: região UV com área zero {uv} (face não desenha textura)")
+                    rep.E("cube", f"{where}: UV region with zero area {uv} (face draws no texture)")
                 if tex_w and tex_h:
                     lo_u, hi_u = min(u1, u2), max(u1, u2)
                     lo_v, hi_v = min(v1, v2), max(v1, v2)
                     if lo_u < 0 or lo_v < 0 or hi_u > tex_w or hi_v > tex_h:
-                        rep.E("cube", f"{where}: uv {uv} fora da textura {tex_w}x{tex_h}")
+                        rep.E("cube", f"{where}: uv {uv} out of texture {tex_w}x{tex_h}")
                     else:
                         stretch = ((hi_u - lo_u) / max(1e-6, hi_v - lo_v))
                         _stretch_check(rep, el, fkey, where, stretch)
@@ -332,12 +332,12 @@ def _check_cube(rep, el, label, tex_w, tex_h, n_tex, textures, fmt):
         if tex is None:
             pass
         elif not _num(tex) or int(tex) != tex:
-            rep.E("cube", f"{where}: texture deve ser índice inteiro ou null, veio {tex!r}")
+            rep.E("cube", f"{where}: texture must be an integer index or null, got {tex!r}")
         elif not (0 <= int(tex) < max(n_tex, 1)):
-            rep.E("cube", f"{where}: texture={tex} mas há {n_tex} textura(s)")
+            rep.E("cube", f"{where}: texture={tex} but there are {n_tex} texture(s)")
         rot = f.get("rotation", 0)
         if rot not in (0, 90, 180, 270):
-            rep.E("cube", f"{where}: face rotation deve ser 0/90/180/270, veio {rot!r}")
+            rep.E("cube", f"{where}: face rotation must be 0/90/180/270, got {rot!r}")
 
 
 def _stretch_check(rep, el, fkey, where, ratio_uv):
@@ -352,41 +352,41 @@ def _stretch_check(rep, el, fkey, where, ratio_uv):
     if ratio_uv > 0 and ratio_face > 0:
         r = ratio_uv / ratio_face
         if r > 1.5 or r < 1 / 1.5:
-            rep.W("stretch", f"{where}: UV esticada ({r:.2f}x) — proporção da região difere da face")
+            rep.W("stretch", f"{where}: UV stretched ({r:.2f}x) — region proportion differs from the face")
 
 
 def _check_mesh(rep, el, label, tex_w, tex_h, n_tex):
     verts = el.get("vertices")
     if not isinstance(verts, dict) or not verts:
-        rep.E("mesh", f"{label}: sem vertices")
+        rep.E("mesh", f"{label}: no vertices")
         return
     vmap = {}
     for k, v in verts.items():
         if not _num3(v):
-            rep.E("mesh", f"{label}: vertex {k} inválido: {v!r}")
+            rep.E("mesh", f"{label}: invalid vertex {k}: {v!r}")
         else:
             vmap[k] = v
     faces = el.get("faces")
     if not isinstance(faces, dict) or not faces:
-        rep.E("mesh", f"{label}: sem faces")
+        rep.E("mesh", f"{label}: no faces")
         return
     all_pts = list(vmap.values())
     centroid = [sum(p[i] for p in all_pts) / len(all_pts) for i in range(3)]
     for fk, f in faces.items():
         where = f"{label}.f{fk}"
         if not isinstance(f, dict):
-            rep.E("mesh", f"{where}: não é objeto")
+            rep.E("mesh", f"{where}: not an object")
             continue
         vids = f.get("vertices")
         if not (isinstance(vids, list) and len(vids) >= 3):
-            rep.E("mesh", f"{where}: vertices precisa de 3+ ids (ordem CCW vista de fora)")
+            rep.E("mesh", f"{where}: vertices needs 3+ ids (CCW order seen from outside)")
             continue
         if len(set(map(str, vids))) != len(vids):
-            rep.E("mesh", f"{where}: ids de vértice repetidos: {vids}")
+            rep.E("mesh", f"{where}: repeated vertex ids: {vids}")
         pts = []
         for vid in vids:
             if str(vid) not in vmap:
-                rep.E("mesh", f"{where}: vértice {vid} não existe")
+                rep.E("mesh", f"{where}: vertex {vid} does not exist")
             else:
                 pts.append(vmap[str(vid)])
         if len(pts) < 3:
@@ -394,29 +394,29 @@ def _check_mesh(rep, el, label, tex_w, tex_h, n_tex):
         uv = f.get("uv")
         if uv is not None:
             if not isinstance(uv, dict):
-                rep.E("mesh", f"{where}: uv deve ser dict vid->[u,v]")
+                rep.E("mesh", f"{where}: uv must be a dict vid->[u,v]")
             else:
                 for vid, p in uv.items():
                     if str(vid) not in [str(x) for x in vids]:
-                        rep.W("mesh", f"{where}: uv para vértice {vid} fora da face")
+                        rep.W("mesh", f"{where}: uv for vertex {vid} outside the face")
                     if not (isinstance(p, list) and len(p) == 2 and all(_num(x) for x in p)):
-                        rep.E("mesh", f"{where}: uv de {vid} inválida: {p!r}")
+                        rep.E("mesh", f"{where}: invalid uv for {vid}: {p!r}")
                     elif tex_w and tex_h and (p[0] < 0 or p[1] < 0 or p[0] > tex_w or p[1] > tex_h):
-                        rep.E("mesh", f"{where}: uv de {vid} fora da textura: {p}")
+                        rep.E("mesh", f"{where}: uv for {vid} out of texture: {p}")
         # planarity
         n = _normal(pts)
         if n is None:
-            rep.E("mesh", f"{where}: face degenerada (pontos colineares)")
+            rep.E("mesh", f"{where}: degenerate face (collinear points)")
         else:
             dmax = max(abs(_dot(_sub(p, pts[0]), n)) for p in pts[1:])
             if dmax > 0.02:
-                rep.W("mesh", f"{where}: face não-planar (desvio {dmax:.3f}u) — triangulação imprevisível")
+                rep.W("mesh", f"{where}: non-planar face (deviation {dmax:.3f}u) — unpredictable triangulation")
             c = [sum(p[i] for p in pts) / len(pts) for i in range(3)]
             if _dot(n, _sub(c, centroid)) < -1e-6:
-                rep.W("mesh", f"{where}: winding virado para DENTRO (ordem CCW deve apontar p/ fora)")
+                rep.W("mesh", f"{where}: winding flipped INWARD (CCW order must point outward)")
         tex = f.get("texture")
         if tex is not None and (_num(tex) and not (0 <= int(tex) < max(n_tex, 1))):
-            rep.E("mesh", f"{where}: texture={tex} inválido")
+            rep.E("mesh", f"{where}: texture={tex} invalid")
 
 
 def _tri_count(elements):
@@ -466,13 +466,13 @@ def _uv_overlap_check(rep, elements):
             if a[1] < b[3] and b[1] < a[3] and a[2] < b[4] and b[2] < a[4]:
                 overlaps += 1
                 if overlaps <= 12:
-                    rep.I("uv_overlap", f"UVs sobrepostas (parcial): {a[0]} e {b[0]}")
+                    rep.I("uv_overlap", f"overlapping UVs (partial): {a[0]} and {b[0]}")
     if overlaps > 12:
-        rep.I("uv_overlap", f"... e mais {overlaps - 12} sobreposições parciais")
+        rep.I("uv_overlap", f"... and {overlaps - 12} more partial overlaps")
 
 
 def _zfight_check(rep, elements):
-    # coleta faces de cubos como (axis, plane, u_lo, u_hi, v_lo, v_hi, name)
+    # collect cube faces as (axis, plane, u_lo, u_hi, v_lo, v_hi, name)
     faces = []
     for el in elements:
         if el.get("type", "cube") != "cube":
@@ -481,8 +481,6 @@ def _zfight_check(rep, elements):
         if not (_num3(frm) and _num3(to)):
             continue
         name = el.get("name", "?")
-        # axis 0 faces: west/east planes at frm[0]/to[0], 2D (y,z)
-        # x-normal faces
         for plane, (a1, a2) in ((frm[0], (1, 2)), (to[0], (1, 2))):
             faces.append((0, plane, frm[a1], to[a1], frm[a2], to[a2], name))
         for plane, (a1, a2) in ((frm[2], (0, 1)), (to[2], (0, 1))):
@@ -503,55 +501,9 @@ def _zfight_check(rep, elements):
             if a[2] < b[3] and b[2] < a[3] and a[4] < b[5] and b[4] < a[5]:
                 hits += 1
                 if hits <= 8:
-                    rep.I("zfight", f"faces coplanares sobrepostas: {a[6]} e {b[6]} (eixo {a[0]}, plano {a[1]:g})")
+                    rep.I("zfight", f"overlapping coplanar faces: {a[6]} and {b[6]} (axis {a[0]}, plane {a[1]:g})")
     if hits > 8:
-        rep.I("zfight", f"... e mais {hits-8} casos")
-    rects = []
-    for el in elements:
-        etype = el.get("type", "cube")
-        name = el.get("name", "?")
-        if etype == "cube":
-            for fkey, f in (el.get("faces") or {}).items():
-                if not isinstance(f, dict) or f.get("texture") is None:
-                    continue
-                uv = f.get("uv")
-                if not (isinstance(uv, list) and len(uv) == 4 and all(isinstance(x, (int, float)) for x in uv)):
-                    continue
-                u1, v1, u2, v2 = uv
-                rects.append((f"{name}.{fkey}", min(u1, u2), min(v1, v2), max(u1, u2), max(v1, v2)))
-        else:
-            for fk, f in (el.get("faces") or {}).items():
-                uv = f.get("uv")
-                if not isinstance(uv, dict) or not uv:
-                    continue
-                us = [p[0] for p in uv.values() if isinstance(p, (list, tuple)) and len(p) == 2]
-                vs = [p[1] for p in uv.values() if isinstance(p, (list, tuple)) and len(p) == 2]
-                if not us:
-                    continue
-                rects.append((f"{name}.f{fk}", min(us), min(vs), max(us), max(vs)))
-    overlaps = 0
-    for i in range(len(rects)):
-        for j in range(i + 1, len(rects)):
-            a, b = rects[i], rects[j]
-            if (a[1], a[2], a[3], a[4]) == (b[1], b[2], b[3], b[4]):
-                continue  # duplicata intencional (mirror)
-            if a[1] < b[3] and b[1] < a[3] and a[2] < b[4] and b[2] < a[4]:
-                overlaps += 1
-                if overlaps <= 12:
-                    rep.I("uv_overlap", f"UVs sobrepostas (parcial): {a[0]} e {b[0]}")
-    if overlaps > 12:
-        rep.I("uv_overlap", f"... e mais {overlaps - 12} sobreposições parciais")
-    n = 0
-    for el in elements:
-        if el.get("type", "cube") == "cube":
-            for f in (el.get("faces") or {}).values():
-                if isinstance(f, dict) and f.get("texture") is not None:
-                    n += 2
-        else:
-            for f in (el.get("faces") or {}).values():
-                if isinstance(f, dict) and isinstance(f.get("vertices"), list):
-                    n += max(0, len(f["vertices"]) - 2)
-    return n
+        rep.I("zfight", f"... and {hits-8} more cases")
 
 
 def _style_lint(rep, elements, tex_pngs, tex_override, tex_w, tex_h, fv):
@@ -562,7 +514,7 @@ def _style_lint(rep, elements, tex_pngs, tex_override, tex_w, tex_h, fv):
     elif 0 in tex_pngs:
         png = tex_pngs[0]
     if png is None:
-        rep.W("style", "sem textura embutida para lint de estilo")
+        rep.W("style", "no embedded texture for style lint")
         return
     w, h, rgba = png["width"], png["height"], png["rgba"]
 
@@ -581,19 +533,19 @@ def _style_lint(rep, elements, tex_pngs, tex_override, tex_w, tex_h, fv):
             n_white += 1
             first_white = first_white or (i // 4 % w, i // 4 // w)
     if n_black:
-        rep.E("style", f"{n_black} px de PRETO PURO (#000) — use um tom escuro colorido "
-                       f"(1º em {first_black})")
+        rep.E("style", f"{n_black} px of PURE BLACK (#000) — use a dark colored tone "
+                       f"(first at {first_black})")
     if n_white:
-        rep.E("style", f"{n_white} px de BRANCO PURO (#fff) — use creme/off-white "
-                       f"(1º em {first_white})")
+        rep.E("style", f"{n_white} px of PURE WHITE (#fff) — use cream/off-white "
+                       f"(first at {first_white})")
     if (255, 0, 255) in colors:
-        rep.W("style", "magenta puro (#ff00ff) presente — é a cor-chave de transparência; use alpha real")
+        rep.W("style", "pure magenta (#ff00ff) present — it's the transparency key color; use real alpha")
     if len(colors) > 20:
-        rep.W("style", f"paleta com {len(colors)} cores — alvo é 8-20 num asset low poly")
+        rep.W("style", f"palette with {len(colors)} colors — target is 8-20 in a low-poly asset")
     elif len(colors) > 0:
-        rep.I("style", f"paleta com {len(colors)} cores")
+        rep.I("style", f"palette with {len(colors)} colors")
 
-    # densidade de texel: px por unidade em faces de cubos
+    # texel density: px per unit on cube faces
     dens = []
     for el in elements:
         if el.get("type", "cube") != "cube" or not (_num3(el.get("from")) and _num3(el.get("to"))):
@@ -612,10 +564,10 @@ def _style_lint(rep, elements, tex_pngs, tex_override, tex_w, tex_h, fv):
     if dens:
         dmin, dmax = min(dens), max(dens)
         if dmax / max(dmin, 1e-6) > 1.6:
-            rep.W("style", f"densidade de texel inconsistente: {dmin:.1f} a {dmax:.1f} px/unidade "
-                           f"(alvo: constante em todo o modelo)")
+            rep.W("style", f"inconsistent texel density: {dmin:.1f} to {dmax:.1f} px/unit "
+                           f"(target: constant across the whole model)")
         else:
-            rep.I("style", f"densidade de texel consistente (~{sum(dens)/len(dens):.1f} px/unidade)")
+            rep.I("style", f"consistent texel density (~{sum(dens)/len(dens):.1f} px/unit)")
 
 
 def _sub(a, b):
@@ -639,7 +591,7 @@ def _normal(pts):
 
 
 def _apply_fix(path, argv):
-    """Corrige automaticamente pixels preto/branco puros na textura embutida."""
+    """Automatically fixes pure black/white pixels in the embedded texture."""
     import base64, json as _j, os
     with open(path, encoding="utf-8") as fh:
         model = _j.load(fh)
@@ -674,7 +626,7 @@ def _apply_fix(path, argv):
         out = root + ".fixed" + (ext or ".bbmodel")
     with open(out, "w", encoding="utf-8") as fh:
         _j.dump(model, fh, separators=(",", ":"))
-    print(f"fix aplicado: {changed} px corrigidos -> {out}", file=__import__("sys").stderr)
+    print(f"fix applied: {changed} px corrected -> {out}", file=__import__("sys").stderr)
 
 
 def main(argv):
@@ -684,7 +636,7 @@ def main(argv):
     path = argv[0]
     style = "--style" in argv
     detail = "--detail" in argv
-    tipo = "padrao"
+    tipo = "default"
     if "--type" in argv:
         tipo = argv[argv.index("--type") + 1]
         detail = True

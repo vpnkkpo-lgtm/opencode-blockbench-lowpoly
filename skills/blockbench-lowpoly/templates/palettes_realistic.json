@@ -1,53 +1,173 @@
 {
-  "_doc": "Paletas REALISTAS (low poly naturalista). Roles: outline (sombra PROFUNDA — NÃO é contorno; o estilo não usa contorno), base, light, dark (passos de VALOR do mesmo material, não cores diferentes), accent (material secundário: madeira, terra, flor), shadow (sombra projetada), background (fundo de preview neutro). Regra do estilo: matizes dessaturados, realismo vem da proporção + luz direcional pintada, nunca de detalhe. Escolha 1 tom por role por peça; alvo 12-20 cores PINTADAS. Use com bbtex.load_palette(); guia: references/style-realistic.md.",
+  "_doc": "REALISTIC palettes (naturalistic low poly). Roles: outline (DEEP shadow — NOT an outline, no contour in this style), base, light, dark (value steps), accent (second material), blush (unused), shadow (projected), background. NEVER pure black/white.",
   "floresta": {
-    "label": "Floresta (folhagem + tronco)",
-    "outline": ["#1f2618", "#232b1b", "#1b2215"],
-    "base": ["#55703c", "#506a38", "#5a763f"],
-    "light": ["#7d9860", "#77925a", "#83a066"],
-    "dark": ["#3c5229", "#384d26", "#40572c"],
-    "accent": ["#8a6a45", "#836340", "#916f4a"],
-    "shadow": ["#2a3520", "#26311d", "#2e3923"],
+    "label": "Forest (foliage + trunk)",
+    "outline": [
+      "#1f2618",
+      "#232b1b",
+      "#1b2215"
+    ],
+    "base": [
+      "#55703c",
+      "#506a38",
+      "#5a763f"
+    ],
+    "light": [
+      "#7d9860",
+      "#77925a",
+      "#83a066"
+    ],
+    "dark": [
+      "#3c5229",
+      "#384d26",
+      "#40572c"
+    ],
+    "accent": [
+      "#8a6a45",
+      "#836340",
+      "#916f4a"
+    ],
+    "shadow": [
+      "#2a3520",
+      "#26311d",
+      "#2e3923"
+    ],
     "background": "#c2c6b4"
   },
   "rocha": {
-    "label": "Rocha (ardósia + terra)",
-    "outline": ["#2a2c30", "#2f3135", "#25272b"],
-    "base": ["#6e7278", "#686c72", "#74787e"],
-    "light": ["#9297a0", "#8c919a", "#989da6"],
-    "dark": ["#4e5258", "#484c52", "#54585e"],
-    "accent": ["#9a8c72", "#93856b", "#a19379"],
-    "shadow": ["#3a3d42", "#35383d", "#3f4247"],
+    "label": "Rock (slate + earth)",
+    "outline": [
+      "#2a2c30",
+      "#2f3135",
+      "#25272b"
+    ],
+    "base": [
+      "#6e7278",
+      "#686c72",
+      "#74787e"
+    ],
+    "light": [
+      "#9297a0",
+      "#8c919a",
+      "#989da6"
+    ],
+    "dark": [
+      "#4e5258",
+      "#484c52",
+      "#54585e"
+    ],
+    "accent": [
+      "#9a8c72",
+      "#93856b",
+      "#a19379"
+    ],
+    "shadow": [
+      "#3a3d42",
+      "#35383d",
+      "#3f4247"
+    ],
     "background": "#b7b9be"
   },
   "couro": {
-    "label": "Couro & madeira (artesão)",
-    "outline": ["#2a1d12", "#302216", "#25190f"],
-    "base": ["#7a5433", "#74502f", "#805838"],
-    "light": ["#9c7048", "#966a42", "#a2764e"],
-    "dark": ["#56381f", "#50341c", "#5c3c22"],
-    "accent": ["#c8b088", "#c1a981", "#cfb88f"],
-    "shadow": ["#3d2a18", "#382614", "#422e1c"],
+    "label": "Leather & wood (artisan)",
+    "outline": [
+      "#2a1d12",
+      "#302216",
+      "#25190f"
+    ],
+    "base": [
+      "#7a5433",
+      "#74502f",
+      "#805838"
+    ],
+    "light": [
+      "#9c7048",
+      "#966a42",
+      "#a2764e"
+    ],
+    "dark": [
+      "#56381f",
+      "#50341c",
+      "#5c3c22"
+    ],
+    "accent": [
+      "#c8b088",
+      "#c1a981",
+      "#cfb88f"
+    ],
+    "shadow": [
+      "#3d2a18",
+      "#382614",
+      "#422e1c"
+    ],
     "background": "#c6baa6"
   },
   "ferro": {
-    "label": "Ferro (aço fosco + ferrugem)",
-    "outline": ["#26282c", "#2b2d31", "#212327"],
-    "base": ["#7d8288", "#777c82", "#83888e"],
-    "light": ["#a4a9b0", "#9ea3aa", "#aaafb6"],
-    "dark": ["#555a61", "#50555c", "#5a5f66"],
-    "accent": ["#8a5a3a", "#835336", "#91613e"],
-    "shadow": ["#3a3d42", "#35383d", "#3f4247"],
+    "label": "Iron (matte steel + rust)",
+    "outline": [
+      "#26282c",
+      "#2b2d31",
+      "#212327"
+    ],
+    "base": [
+      "#7d8288",
+      "#777c82",
+      "#83888e"
+    ],
+    "light": [
+      "#a4a9b0",
+      "#9ea3aa",
+      "#aaafb6"
+    ],
+    "dark": [
+      "#555a61",
+      "#50555c",
+      "#5a5f66"
+    ],
+    "accent": [
+      "#8a5a3a",
+      "#835336",
+      "#91613e"
+    ],
+    "shadow": [
+      "#3a3d42",
+      "#35383d",
+      "#3f4247"
+    ],
     "background": "#b3b5ba"
   },
   "campo": {
-    "label": "Campo (palha + papoila)",
-    "outline": ["#33301a", "#38341e", "#2e2b17"],
-    "base": ["#a89a58", "#a19352", "#afa15e"],
-    "light": ["#c8bc78", "#c1b571", "#cfc37f"],
-    "dark": ["#7d7240", "#776c3b", "#837845"],
-    "accent": ["#b85450", "#b04d49", "#c05b57"],
-    "shadow": ["#55502c", "#4f4a28", "#5b5630"],
+    "label": "Field (straw + poppy)",
+    "outline": [
+      "#33301a",
+      "#38341e",
+      "#2e2b17"
+    ],
+    "base": [
+      "#a89a58",
+      "#a19352",
+      "#afa15e"
+    ],
+    "light": [
+      "#c8bc78",
+      "#c1b571",
+      "#cfc37f"
+    ],
+    "dark": [
+      "#7d7240",
+      "#776c3b",
+      "#837845"
+    ],
+    "accent": [
+      "#b85450",
+      "#b04d49",
+      "#c05b57"
+    ],
+    "shadow": [
+      "#55502c",
+      "#4f4a28",
+      "#5b5630"
+    ],
     "background": "#d4cdb4"
   }
 }

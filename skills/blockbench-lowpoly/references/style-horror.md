@@ -1,56 +1,56 @@
-# Guia de estilo — terror / horror low poly
+# Style guide — horror / horror low poly
 
-Premissa técnica: o render (`bbrender`) e o GLB usam **luz neutra** e textura NEAREST — todo o clima de terror vem da **TEXTURA pintada** e da **silhueta**. Não conte com iluminação de cena.
+Technical premise: the render (`bbrender`) and the GLB use **neutral lighting** and NEAREST texture — all the horror mood comes from the **painted TEXTURE** and the **silhouette**. Don't rely on scene lighting.
 
-## 1. Silhueta do "errado"
+## 1. The "wrong" silhouette
 
-- Proporção desconfortável DE PROPÓSITO: braço fino longo demais, tronco estreito, cabeça inclinada, um ombro maior que o outro.
-- Assimetria real: um olho dessincronizado (tamanhos diferentes), boca rasgada de um só lado, orelha faltando.
-- Rasgos = entalhes de 1px na BORDA da silhueta (na face frontal, pixels de fundo transparente), nunca no meio da face.
-- Nada de roundness fofo: cantos retos, arestas aparentes. Se lê como "ameaça" a 64px, está certo.
+- Intentionally uncomfortable proportions: arm too thin and too long, narrow trunk, tilted head, one shoulder bigger than the other.
+- Real asymmetry: one desynced eye (different sizes), mouth torn on one side only, missing ear.
+- Tears = 1px notches on the EDGE of the silhouette (on the front face, background-transparent pixels), never in the middle of the face.
+- No cute roundness: straight corners, visible edges. If it reads as "threat" at 64px, it's right.
 
-## 2. Paleta (terror)
+## 2. Palette (horror)
 
-- Dessaturada + **1–2 acentos de alta carga**: sangue `#7d2f33`, bile `#c2cf4e`, bioluz `#58e0c8`.
-- O "preto" do terror é **molhado**: `#120d14`, `#0e1b26` — nunca `#000000` (o lint reprova, e morte chapada lê barata).
-- Pele: pálida/morta (verde-acinzentada, cinza-rosado), nunca tom saudável.
-- Paletas prontas: `templates/palettes_horror.json` (`zumbi`, `vampiro`, `abissal`, `espectral`, `gosma`).
+- Desaturated + **1–2 high-charge accents**: blood `#7d2f33`, bile `#c2cf4e`, bioluminescence `#58e0c8`.
+- Horror "black" is **wet**: `#120d14`, `#0e1b26` — never `#000000` (the lint rejects it, and flat death reads cheap).
+- Skin: pale/dead (gray-green, pink-gray), never a healthy tone.
+- Ready palettes: `templates/palettes_horror.json` (`zombie`, `vampire`, `abyssal`, `spectral`, `slime`).
 
-## 3. Superfície: sujeira, umidade, podridão
+## 3. Surface: dirt, moisture, rot
 
-- **SEM `panel` limpo.** A luz é suja: `dither` + `spot` de tons `dark`/`accent` espalhados irregularmente por cima da base.
-- Umidade = manchas escuras grandes de bordas irregulares (`dither` denso, 40–60%) + 1px claro no topo de cada mancha (brilho de coisa úmida).
-- Manchas de sangue: `spot(r≥2.4, snap=True)` vermelho-escuro + **gotejamento**: `line_v` de 2–4px descendo da mancha, com `set` avulso nas pontas.
-- Podridão: 2–3 pintas com o tom `accent` + borda `outline` (buraco/ferida lê melhor com contraste interno).
-- Rim invertido (opcional): em vez da linha light no topo (`panel`), pinte a linha light na BASE — luz vinda do chão (fogueira, abismo). É uma inversão barata e poderosa.
+- **NO clean `panel`.** Light is dirty: `dither` + loose `spot` of `dark`/`accent` tones scattered irregularly over the base.
+- Moisture = large dark blotches with irregular edges (`dither` dense, 40–60%) + 1px light on top of each blotch (shine of something wet).
+- Blood stains: `spot(r≥2.4, snap=True)` dark red + **dripping**: 2–4px `line_v` descending from the stain, with loose `set` pixels at the tips.
+- Rot: 2–3 spots with the `accent` tone + `outline` border (a hole/wound reads better with internal contrast).
+- Inverted rim (optional): instead of the light line on top (`panel`), paint the light line at the BOTTOM — light coming from the floor (bonfire, abyss). Cheap and powerful inversion.
 
-## 4. Rosto
+## 4. Face
 
-- Órbita vazia: socket = bloco `outline` 3×3 com **1 único pixel `glow`** assimétrico dentro. Olhos com tamanhos diferentes (ex.: 2×2 e 3×3).
-- Boca: grande demais para a cabeça, dentes = `dots(step=2)` de 1px do tom `light` (osso).
-- **Sem blush.** Sem sorriso. `mouth_o` com o dobro da largura lê como grito.
-- Um detalhe só de estranheza: pescoço fino demais, costura na cara, segundo par de olhos menores.
+- Empty socket: socket = 3×3 `outline` block with **1 single `glow` pixel** asymmetric inside. Eyes of different sizes (e.g., 2×2 and 3×3).
+- Mouth: too big for the head, teeth = 1px `light` `dots(step=2)` (bone).
+- **No blush.** No smile. `mouth_o` at double width reads as a scream.
+- One detail of strangeness only: neck too thin, stitching on the face, second smaller pair of eyes.
 
-## 5. Detalhes (kit do horror)
+## 5. Details (horror kit)
 
-| efeito | receita |
-|--------|---------|
-| costura | `line_h` + `dots(step=2)` de 1px cruzando a linha |
-| bandagem | `hstripes` 2 tons claros + 1px `outline` entre voltas |
-| osso exposto | mancha `#cfc3a0` com `outline` em volta + 1px `light` no topo |
-| gotejamento | `spot` + `line_v` descendente com falhas (pixels isolados) |
-| olho brilhante | socket escuro + 1px `glow`; NUNCA sombrinha/faísca cute |
+| effect | recipe |
+|---|---|
+| stitching | `line_h` + `dots(step=2)` 1px crossing the line |
+| bandage | `hstripes` 2 light tones + 1px `outline` between turns |
+| exposed bone | `#cfc3a0` blotch with `outline` around + 1px `light` on top |
+| dripping | `spot` + descending `line_v` with gaps (isolated pixels) |
+| glowing eye | dark socket + 1px `glow`; NEVER cute spark/shadow |
 
-## 6. Orçamento e QC
+## 6. Budget and QC
 
-- Orçamento: mob de terror até 3000 tris; assimetria vale mais que detalhe.
-- QC obrigatório: `bbrender` e **olhar** — o teste é "isso me ameaça?" a 64px. Se ficou goofy (boca simétrica grande + olhos redondos centrados = fofo, não assustador), quebre a simetria.
-- `bbcheck --style`: 0 erros (preto/branco puro = reprovado) e paleta ≤20.
+- Horror mob budget up to 3000 tris; asymmetry matters more than detail.
+- Mandatory QC: `bbrender` and **look** — the test is "does this threaten me?" at 64px. If it turned goofy (big symmetric mouth + centered round eyes = cute, not scary), break the symmetry.
+- `bbcheck --style`: 0 errors (pure black/white = rejected) and palette ≤20.
 
-## 7. Não faça
+## 7. Don'ts
 
-- Gore pixel-perfect: em 128px vira ruído. Sugira, não desenhe tudo.
-- Contorno cute uniforme: aqui o outline é sujo e quebrado (falhas de 1px são bem-vindas).
-- Iluminação "certa": o horror usa luz errada de propósito (de baixo, de trás).
+- Pixel-perfect gore: at 128px it becomes noise. Suggest, don't draw everything.
+- Uniform cute outline: here the outline is dirty and broken (1px gaps are welcome).
+- "Correct" lighting: horror uses wrong light on purpose (from below, from behind).
 
-Outros estilos da skill: `style-cute-cartoon.md`, `style-dark.md`, `style-realistic.md` — mesmo pipeline, outra silhueta/pintura.
+Other styles in the skill: `style-cute-cartoon.md`, `style-dark.md`, `style-realistic.md` — same pipeline, different silhouette/painting.

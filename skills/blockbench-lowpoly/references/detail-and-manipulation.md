@@ -1,113 +1,113 @@
-# Detalhe fino e manipulação direta — como chegar perto da referência
+# Fine detail and direct manipulation — getting close to the reference
 
-O gap típico entre "o agente modelou legal" e "está perto da referência" **não é textura nem paleta**: é geometria. Blockout de caixas retas = leitura de blockout, por mais bem pintado que esteja. Este guia é o kit para sair disso.
+The typical gap between "the agent modeled it nicely" and "it's close to the reference" is **not texture or palette**: it's geometry. Blockout of straight boxes = blockout read, no matter how well painted. This guide is the kit to get past that.
 
-## 0. Traduzindo a referência (imagem) em chamadas
+## 0. Translating the reference (image) into calls
 
-A referência já está na sua tela/contexto — leia com a tool `read` e passe por esta tabela **antes** de escrever a primeira linha de geometria. Ela é universal: serve para qualquer ref (minecraft, concept art, foto de estátua, asset de outro agente).
+The reference is already on your screen/context — read it with the `read` tool and run it through this table **before** writing the first line of geometry. It's universal: works for any ref (minecraft, concept art, statue photo, another agent's asset).
 
-| O que você vê na imagem | Como escreve |
+| What you see in the image | How to write it |
 |---|---|
-| a silhueta tem N "degraus"/massas | uma peça por massa (macro), `Model.cube` com `faces` da silhueta |
-| proporção geral (largura/altura) | escolhe a escala: altura ≈ 16u é o padrão Blockbench/Minecraft |
-| canto cortado, quina chanfrada, "aresta viva" | `bbkit.bevel_box(..., bevel=0.2..0.5)` NAQUELA peça |
-| ponta que afina (chapéu, bico, peitoral, nariz) | `bbkit.taper_box(shrink=...)` ou `bbkit.pyramid` |
-| topo arredondado / dome / bolinha | `bbkit.cylinder` ou `bbkit.sphere` |
-| rampa, telhado, bico de casco | `bbkit.wedge(axis=0\|2)` |
-| rebites, parafusos, dentes, tijolos, botões | `bbkit.grid_of(nu, nv)` na face certa |
-| fita/cinto/aro/moldura/banda na borda da peça | `bbkit.edge_trim(sides=("top","bottom"))` |
-| fivela, remendo, placa, bolso, placa de peito | `bbkit.on_face(cu, cv, du, dv, depth)` |
-| uma peça dos dois lados (2 braços, 2 asas) | `bbkit.mirror_group([...], axis, center)` — 1 linha, simetriagarantida |
-| nada disso, só cubos lisos | **falta micro-detalhe**: ~1 detalhe a cada 2–3u de largura da peça maior |
-| detalhe só do lado da luz | replica só ali (detalhe é direcional, não simétrico) |
+| the silhouette has N "steps"/masses | one piece per mass (macro), `Model.cube` with silhouette `faces` |
+| overall proportion (width/height) | pick the scale: height ≈ 16u is the Blockbench/Minecraft default |
+| cut corner, chamfered edge, "live edge" | `bbkit.bevel_box(..., bevel=0.2..0.5)` on THAT piece |
+| tip that tapers (hat, beak, chest plate, nose) | `bbkit.taper_box(shrink=...)` or `bbkit.pyramid` |
+| rounded top / dome / ball | `bbkit.cylinder` or `bbkit.sphere` |
+| ramp, roof, hull nose | `bbkit.wedge(axis=0\|2)` |
+| rivets, screws, teeth, bricks, buttons | `bbkit.grid_of(nu, nv)` on the right face |
+| tape/belt/rim/molding/band on the piece edge | `bbkit.edge_trim(sides=("top","bottom"))` |
+| buckle, patch, plate, pocket, chest plate | `bbkit.on_face(cu, cv, du, dv, depth)` |
+| a piece on both sides (2 arms, 2 wings) | `bbkit.mirror_group([...], axis, center)` — 1 line, symmetry guaranteed |
+| none of the above, just smooth cubes | **missing micro-detail**: ~1 detail every 2–3u of the largest piece's width |
+| detail only on the lit side | replicate only there (detail is directional, not symmetric) |
 
-Ordem de trabalho: silhueta → chanfro/ponta → massas médias → detalhe → textura. Pular direto pro detalhe em cima de caixa lisa não fecha o gap.
+Work order: silhouette → chamfer/tip → medium masses → detail → texture. Skipping straight to detail on top of a smooth box doesn't close the gap.
 
-## 1. As três escalas (regra que decide a fidelidade)
+## 1. The three scales (the rule that decides fidelity)
 
-| Escala | Tamanho | O que é | Exemplo |
+| Scale | Size | What it is | Example |
 |---|---|---|---|
-| **Macro** | 100% | silhueta, proporção, pose | corpo, cabeça, capa |
-| **Meso** | 25–100% | massas que quebram o bloco | ombreira, cintura, aba, rabo |
-| **Micro** | ≤25% | detalhe que só aparece de perto | rebite, friso, botão, dente, cinto, fivela |
+| **Macro** | 100% | silhouette, proportion, pose | body, head, cape |
+| **Meso** | 25–100% | masses breaking the block | shoulder pad, waist, brim, tail |
+| **Micro** | ≤25% | detail only visible up close | rivet, groove, button, tooth, belt, buckle |
 
-Regra do `bbcheck --detail --type mob`: micro = peça com aresta ≤**20%** da maior dimensão (prop: 30%, veículo: 15%). Se a menor peça do modelo passa disso, **não existe micro** — é o aviso mais importante do lint. Um herói de 16u de altura precisa de peças de ~0.5–3u para ler.
+Rule of `bbcheck --detail --type mob`: micro = piece with edge ≤**20%** of the largest dimension (prop: 30%, vehicle: 15%). If the smallest piece in the model exceeds that, **there is no micro** — the most important lint warning. A 16u-tall hero needs pieces of ~0.5–3u to read.
 
-## 2. Truque nº1: mate o "caixote" com bevel
+## 2. Trick #1: kill the "box" with bevel
 
-`bbkit.bevel_box(frm, to, bevel)` corta as 12 arestas a 45° (6 octógonos + 12 quads + 8 tris). Um único elemento, silhueta com vida, luz pegando os cantos. `taper_box` (topo menor/offset), `wedge` (rampa), `pyramid`, `cylinder`, `sphere` completam o vocabulário de formas.
+`bbkit.bevel_box(frm, to, bevel)` cuts the 12 edges at 45° (6 octagons + 12 quads + 8 tris). A single element, a silhouette with life, light catching the corners. `taper_box` (smaller/top offset), `wedge` (ramp), `pyramid`, `cylinder`, `sphere` complete the shape vocabulary.
 
-Regra prática: **bevella as peças que ficam na silhueta** (ombro, tampa, capacete, base), deixe caixas cruas no que fica escondido.
+Practical rule: **bevel the pieces on the silhouette** (shoulder, lid, helmet, base), leave raw boxes on what's hidden.
 
-## 3. Detalhe pequeno: placement por FACE
+## 3. Small detail: placement by FACE
 
-Adivinhar coordenadas de um rebite é onde os agentes travam. Use a face como referência:
-
-```python
-bbkit.on_face(m, "fivela", "cinto", "north", cu=0.5, cv=0.5, du=0.25, dv=0.18, depth=0.12, group=g)
-bbkit.grid_of(m, "rebite", "placa", "north", nu=3, nv=2, du=0.2, dv=0.2, group=g)   # 6 rebites
-bbkit.edge_trim(m, "aro", "porta", "up", thickness=0.15, group=g, sides=("top","bottom"))
-```
-
-- `cu/cv` = fração 0..1 na face; `du/dv` = tamanho em fração; `depth` = quanto avança para fora; `sink` = penetração (evita z-fight).
-- Bases por face: `north/south` u→±X, v→+Y; `east/west` u→∓Z, v→+Y; `up` u→+X, v→−Z; `down` u→+X, v→+Z.
-- Por default o detalhe só gera **a face de apoio + topo** (economiza UV e tris — faces laterais de um rebite de 0.25u são lixo). Passe `faces=[...]` se quiser todas.
-- Detalhe nunca é menor que **1 texel** (o `bbkit` expande pra isso): em `density=2` o mínimo prático é 0.5u, em `density=3` é 0.33u.
-
-## 4. Simetria barata
+Guessing rivet coordinates is where agents stall. Use the face as reference:
 
 ```python
-bbkit.mirror_group(m, ["braco_e", "mao_e"], axis=0, center=8, group=g)   # clona + espelha
+bbkit.on_face(m, "buckle", "belt", "north", cu=0.5, cv=0.5, du=0.25, dv=0.18, depth=0.12, group=g)
+bbkit.grid_of(m, "rivet", "plate", "north", nu=3, nv=2, du=0.2, dv=0.2, group=g)   # 6 rivets
+bbkit.edge_trim(m, "rim", "door", "up", thickness=0.15, group=g, sides=("top","bottom"))
 ```
-Espelhar grupo inteiro custa uma linha e garante simetria (que o olho humano lê antes de tudo).
 
-## 5. Densidade de texel: 2 para massa, 3 para detalhe
+- `cu/cv` = fraction 0..1 on the face; `du/dv` = size as fraction; `depth` = how far it protrudes; `sink` = penetration (avoids z-fight).
+- Bases per face: `north/south` u→±X, v→+Y; `east/west` u→∓Z, v→+Y; `up` u→+X, v→−Z; `down` u→+X, v→+Z.
+- By default the detail generates **only the support face + top** (saves UV and tris — side faces of a 0.25u rivet are junk). Pass `faces=[...]` if you want all.
+- Detail is never smaller than **1 texel** (`bbkit` expands to that): at `density=2` the practical minimum is 0.5u, at `density=3` it's 0.33u.
 
-| Cenário | `density` | Textura |
+## 4. Cheap symmetry
+
+```python
+bbkit.mirror_group(m, ["left_arm", "left_hand"], axis=0, center=8, group=g)   # clone + mirror
+```
+Mirroring a whole group costs one line and guarantees symmetry (which the human eye reads first).
+
+## 5. Texel density: 2 for masses, 3 for detail
+
+| Scenario | `density` | Texture |
 |---|---|---|
-| corpo/pieces grandes | 2 | 128×128 |
-| com muito micro-detalhe | 3 | 256×256 |
-| prop pequeno (<8u) | 3 | 128×128 |
+| body/large pieces | 2 | 128×128 |
+| lots of micro-detail | 3 | 256×256 |
+| small prop (<8u) | 3 | 128×128 |
 
-Detalhe denso em textura pequena estoura o alocador de UV (`ValueError: textura cheia`) — é sinal de que a textura precisa crescer, não de cortar detalhe.
+Dense detail on a small texture blows up the UV allocator (`ValueError: texture full`) — that's a signal the texture needs to grow, not to cut detail.
 
-## 6. Pós-edição (edite o que já existe)
+## 6. Post-editing (edit what already exists)
 
-Útil quando o modelo veio do Blockbench, de outro agente, ou do `Model.load()`:
+Useful when the model came from Blockbench, another agent, or `Model.load()`:
 
 ```python
-bbkit.find(m, "tronco")                       # pega o elemento
-bbkit.bounds(m, "tronco")                     # (frm, to)
-bbkit.translate(m, "tronco", (0, 0.5, 0))     # move (origin acompanha)
-bbkit.resize(m, "tronco", 1, 12, anchor="min") # estica mantendo a base
-bbkit.set_extent(m, "tampa", 1, 14.0)         # snapa a borda `to` na coordenada
-bbkit.rotate(m, "braco", (0, 0, 20))          # soma graus (ZYX)
-bbkit.set_origin(m, "braco", (4, 6, 6))       # pivô na junta, sem mover geometria
-bbkit.duplicate(m, "pena_e", "pena_d", offset=(6, 0, 0), group=g)
-bbkit.remove(m, "pena_d")                     # desfaça a cópia
+bbkit.find(m, "trunk")                       # get the element
+bbkit.bounds(m, "trunk")                     # (frm, to)
+bbkit.translate(m, "trunk", (0, 0.5, 0))     # move (origin follows)
+bbkit.resize(m, "trunk", 1, 12, anchor="min") # stretch keeping the base
+bbkit.set_extent(m, "lid", 1, 14.0)           # snap the `to` edge to the coordinate
+bbkit.rotate(m, "arm", (0, 0, 20))            # add degrees (ZYX)
+bbkit.set_origin(m, "arm", (4, 6, 6))         # pivot on the joint, no geometry move
+bbkit.duplicate(m, "feather_l", "feather_r", offset=(6, 0, 0), group=g)
+bbkit.remove(m, "feather_r")                  # undo the copy
 ```
 
-`set_origin` + `rotate` é o par que faz membro de personagem funcionar: pivô na junta primeiro, rotação depois.
+`set_origin` + `rotate` is the pair that makes character limbs work: pivot on the joint first, then rotate.
 
-## 7. QC de fidelidade
+## 7. Fidelity QC
 
 ```bash
-python3 scripts/bbcheck.py modelo.bbmodel --detail --type mob --style
+python3 scripts/bbcheck.py model.bbmodel --detail --type mob --style
 ```
 
-`--type` calibra os limiares: `mob` (micro ≤20%, alerta de alinhamento mais rígido) · `prop` (≤30%, mais tolerante a caixas) · `veiculo` (≤15%) · `diorama` (≤25%). Sem `--type` valem os genéricos.
+`--type` calibrates thresholds: `mob` (micro ≤20%, stricter alignment alert) · `prop` (≤30%, more tolerant of boxes) · `vehicle` (≤15%) · `diorama` (≤25%). Without `--type`, generic values apply.
 
-- **peça fina ausente** → adiciona micro-detalhe (`on_face`/`grid_of`) ou quebra massas.
-- **tudo alinhado aos eixos** → incline uma peça-chave (5–15° já muda tudo) ou use `bevel_box`.
-- **nenhuma forma com bevel** → 100% caixas retas: o modelo lê como blockout.
-- Depois: render 3/4 (`bbrender ... view="hero"`) e confirme que o detalhe aparece **na silhueta**, não só de frente.
+- **missing thin piece** → add micro-detail (`on_face`/`grid_of`) or break masses.
+- **everything axis-aligned** → tilt a key piece (5–15° already changes everything) or use `bevel_box`.
+- **no beveled shapes** → 100% straight boxes: the model reads as blockout.
+- Afterward: render 3/4 (`bbrender ... view="hero"`) and confirm the detail shows up in the **silhouette**, not just from the front.
 
-## 8. Anti-padrões
+## 8. Anti-patterns
 
-| Erro | Como acerta |
+| Mistake | How to fix |
 |---|---|
-| detalhe "enfeite" sem função | só detalhe que conta história: rebite, fivela, cinto, trincheira |
-| rebite do tamanho do peito | micro ≤25% da escala maior; se precisa de zoom pra ver, é o tamanho certo |
-| rotacionar cubo pra "dar vida" | cubo rotacionado quebra a leitura de UV por face; prefira `bevel_box`/`taper_box` |
-| detalhe simétrico perfeito em cima | quebra 1–2 unidades de posição, mantém o resto simétrico |
-| encher de peças iguais | 1 detalhe repetido (grid_of) é mais barato e mais elegante que 6 cópias manuais |
+| "decoration" detail with no function | only detail that tells a story: rivet, buckle, belt, trench |
+| rivet the size of the chest | micro ≤25% of the larger scale; if you need zoom to see it, the size is right |
+| rotating a cube "to add life" | a rotated cube breaks per-face UV reading; prefer `bevel_box`/`taper_box` |
+| perfectly symmetric detail on top | break 1–2 units of position, keep the rest symmetric |
+| filling with identical pieces | one repeated detail (`grid_of`) is cheaper and more elegant than 6 manual copies |
