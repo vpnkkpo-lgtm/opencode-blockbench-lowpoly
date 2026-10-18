@@ -192,7 +192,7 @@ If this toolkit saved you time, consider buying me a coffee.
 
 </div>
 
-Every bit helps keep the forge running. Thanks! 🙏
+Every bit helps keep the project running. Thanks! 🙏
 
 ---
 
