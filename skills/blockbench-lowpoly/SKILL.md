@@ -5,7 +5,7 @@ description: Pure-Python toolkit (no MCP, no dependencies) to author low-poly 3D
 
 # Blockbench LowPoly — Procedural Genesis of Cute Cartoon Assets
 
-100% pure-Python toolkit for the agent to **author low-poly 3D assets from code** and deliver them in 4 formats: `.bbmodel` (native Blockbench project), `.glb` (engine/runtime), preview PNGs and a link that opens the model directly in the Blockbench web app. Zero external dependencies, zero MCP, zero editor.
+100% pure-Python toolkit to **author low-poly 3D assets from code** and deliver them in 4 formats: `.bbmodel` (native Blockbench project), `.glb` (engine/runtime), preview PNGs and a link that opens the model directly in the Blockbench web app. Zero external dependencies, zero MCP, zero editor.
 
 ## Structure
 

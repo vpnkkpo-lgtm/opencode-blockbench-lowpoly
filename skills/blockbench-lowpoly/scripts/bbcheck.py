@@ -78,7 +78,7 @@ def _num(v):
 
 
 DETAIL_TYPES = {
-    # type: (fraction for "micro", fraction for "no thin piece", alignment alert)
+    # returns (micro_fraction, thin_piece_fraction, alignment_alert)
     "mob": (0.20, 0.05, 0.85),
     "character": (0.20, 0.05, 0.85),
     "prop": (0.30, 0.10, 1.01),

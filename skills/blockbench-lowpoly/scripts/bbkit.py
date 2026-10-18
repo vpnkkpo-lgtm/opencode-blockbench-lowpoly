@@ -1,18 +1,18 @@
 #!/usr/bin/env python3
 """
-bbkit.py — kit for FINE DETAIL and DIRECT MANIPULATION for blockbench-lowpoly.
+bbkit.py — fine detail and direct manipulation helpers for blockbench-lowpoly.
 
-Why it exists: modeling with only large `Model.cube` calls gives a "box". The
-distance to a quality reference comes from (a) shapes with cut corners/bevel,
-(b) small details (rivets, grooves, teeth, buckles) and (c) being able to place
-those details **on the face of another piece** without guessing coordinates.
+Box-only blockouts read as boxes. Closing the gap to a quality reference comes
+from (a) shapes with cut corners or bevels, (b) small details — rivets, grooves,
+teeth, buckles — and (c) placing those details on the face of another piece
+without guessing coordinates.
 
 Primitives:
 
     Shapes (become "free" Mesh, 1 element, planar UV):
         bevel_box  taper_box  wedge  pyramid  cylinder  sphere
 
-    Detail relative to a FACE (the heart of "direct manipulation"):
+    Detail relative to a FACE:
         face_rect  on_face  grid_of  edge_trim
         FACE_BASIS: north/east/south/west/up/down
 
@@ -319,8 +319,8 @@ def remove(model, name):
 
 
 # -------------------------------------------------------------------- shapes
-# Mesh helpers: normals via Newell (order-independent), angular sorting of
-# vertices (convex polygon) and outward orientation by the volume center.
+# Mesh helpers: normals via Newell (order-independent), angular vertex sorting
+# (convex polygon) and outward orientation relative to the volume center.
 
 def _plane_normal(pts):
     """Plane normal from ANY non-collinear triple (convex planar polygon)."""
@@ -556,7 +556,7 @@ def _smoke_test():
     import bbcheck
     import bbmodel
 
-    # dense detail: larger texture + density 3 (otherwise UV overflows)
+    # dense detail: needs a larger texture and density 3, otherwise UVs overflow
     m = bbmodel.Model("kit_smoke", tex_w=256, tex_h=256, density=3)
     g = m.group("body", origin=(8, 0, 8))
     m.cube("box", (4, 0, 4), (12, 6, 12), group=g)

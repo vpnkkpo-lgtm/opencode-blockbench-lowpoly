@@ -3,7 +3,7 @@
 bburl.py — builds the Blockbench web app link (web.blockbench.net) that opens
 the model without downloading.
 
-Format (verified against the web-link.ts source of the blockbench-mcp-plugin):
+Format:
     https://web.blockbench.net/#loadtype=json&loadname=NAME&loaddata=DATA
 
 The app decodes the hash with a SINGLE decodeURIComponent, splits on '&' and
@@ -31,9 +31,10 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 BASE = "https://web.blockbench.net/#"
 SAFE_NAME = re.compile(r"[^A-Za-z0-9._ -]+")
 MAX_HASH_WARN = 1_500_000
-# The web app picks the codec by the EXTENSION of loadname (js/io/io.js: pathToExtension
-# + load_filter.extensions). Without ".bbmodel" no codec matches and the app shows
-# "invalid format" (unsupportedFileFormatMessage).
+# The web app picks the codec by the extension of loadname
+# (js/io/io.js: pathToExtension + load_filter.extensions). Without ".bbmodel" no
+# codec matches and the app reports "invalid format"
+# (unsupportedFileFormatMessage).
 PROJECT_EXT = ".bbmodel"
 
 

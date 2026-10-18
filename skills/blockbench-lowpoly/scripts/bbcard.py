@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""card_v7.py — multi-theme store card.
+"""bbcard.py — multi-theme store card.
 
-Same layout as v6 (side hero + checklist + info panel + CTA), but with
-different VIBE THEMES for each model type.
+Layout: side hero + checklist + info panel + CTA. Each model type has its own
+visual theme.
 
 Themes:
   casual       candy pink/purple, cute (default)
@@ -13,7 +13,7 @@ Themes:
   royal        purple/gold, luxury, elegant
 
 CLI:
-  python card_v7.py --theme horror --name "Zombie" --desc "..." \
+  python bbcard.py --theme horror --name "Zombie" --desc "..." \
       --preview prev.png --out card.png --info "Key: value" \
       [--price "R$ 19,90" --old-price "R$ 39,90"] [--badge "NEW"]
 """
@@ -504,9 +504,9 @@ def stats_from_bbmodel(path, estilo="Cute Lowpoly"):
 
 # ---------------------------------------------------------------- main
 def main():
-    ap = argparse.ArgumentParser(description="Multi-theme store card v7 (PIL)")
+    ap = argparse.ArgumentParser(description="Multi-theme store card")
     ap.add_argument("--theme", default="casual", choices=sorted(THEMES.keys()),
-                    help="card theme/vibe")
+                    help="card theme")
     ap.add_argument("--name", default="MODEL NAME")
     ap.add_argument("--desc", default="Model description.")
     ap.add_argument("--preview", default=None)
@@ -531,7 +531,7 @@ def main():
     desc = ascii_text(args.desc)
     infos = [ascii_text(i) for i in args.info]
 
-    # --model: pull name + stats straight from the .bbmodel (explicit info takes priority)
+    # explicit --info entries take priority over the ones read from the .bbmodel
     if args.model and os.path.exists(args.model):
         mname, minfos = stats_from_bbmodel(args.model, estilo=ascii_text(args.estilo))
         if args.name == "MODEL NAME":

@@ -1,15 +1,16 @@
 #!/usr/bin/env python3
 """
-Mushroom Mascot — DIDACTIC example of the STRUCTURE of the blockbench-lowpoly pipeline.
+Mushroom Mascot — reference implementation of the blockbench-lowpoly pipeline.
 
-READ this script to understand the structure: groups -> cubes -> uv_regions ->
-cartoon painting -> validation (bbcheck) -> GLB -> previews -> web app link.
-Then build YOUR asset from scratch. This file is a STRUCTURE reference,
-not a base to copy/retexture.
+The pipeline, in order: groups -> cubes -> uv_regions -> cartoon painting ->
+validation (bbcheck) -> GLB -> previews -> web app link.
+
+This file documents that structure. It is not a base to copy and retexture;
+build new assets from scratch.
 
     python3 build.py
 
-Outputs (generated in this folder when you run it): mascote.bbmodel, mascote.glb,
+Outputs (generated in this folder): mascote.bbmodel, mascote.glb,
 preview_sheet.png, preview_hero.png, link.txt
 """
 
@@ -29,8 +30,8 @@ import bburl  # noqa: E402
 
 PAL = bbtex.load_palette(os.path.join(HERE, "..", "..", "templates", "palettes_cute.json"),
                          "cogumelo")
-# final mascot palette: exactly 8 colors (no ad-hoc shade(), otherwise the
-# color counter exceeds the 8-20 target of the style guide)
+# final palette: exactly 8 colors. Ad-hoc shade() calls would push the count
+# past the 8-20 target of the style guide
 C_EYE = PAL["outline"][0]      # #4a2d3a
 C_BLUSH = PAL["blush"][0]      # #f2a0a8
 C_CAP = PAL["base"][0]         # #e05a5a
@@ -88,7 +89,7 @@ def paint(m):
         panel_cream(r("tronco", face))
     c.panel(r("tronco", "down"), C_CREAM_AO, light=C_CREAM, dark=C_CREAM_AO)
 
-    # face (north): eyes + blush + smile (all above the feet!)
+    # face (north): eyes + blush + smile, all above the feet
     face_reg = r("tronco", "north")
     panel_cream(face_reg)
     c.eyes(face_reg, C_EYE, C_CREAM_L, size=2, gap=5, y_frac=0.28)
@@ -147,7 +148,7 @@ def main():
     assert glb_ok, problems
     print(f"saved {glb_path} ({size} bytes, valid GLB)")
 
-    # 4. previews (the agent looks at these PNGs for visual QC)
+    # 4. previews, for visual QC
     bbrender.render_sheet(m, os.path.join(HERE, "preview_sheet.png"), size=256)
     bbrender.render(m, os.path.join(HERE, "preview_hero.png"), "hero", 384)
     print("previews saved")

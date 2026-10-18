@@ -1,12 +1,12 @@
 # Fine detail and direct manipulation — getting close to the reference
 
-The typical gap between "the agent modeled it nicely" and "it's close to the reference" is **not texture or palette**: it's geometry. Blockout of straight boxes = blockout read, no matter how well painted. This guide is the kit to get past that.
+The gap between a clean blockout and a faithful match to the reference is **not texture or palette**: it is geometry. Straight boxes read as a blockout no matter how well they are painted. This guide covers the geometry work that closes that gap.
 
 ## 0. Translating the reference (image) into calls
 
-The reference is already on your screen/context — read it with the `read` tool and run it through this table **before** writing the first line of geometry. It's universal: works for any ref (minecraft, concept art, statue photo, another agent's asset).
+Run the reference image through this table **before** writing the first line of geometry. It applies to any reference: pixel art, concept art, a statue photo, or an existing asset.
 
-| What you see in the image | How to write it |
+| Feature in the reference | How to write it |
 |---|---|
 | the silhouette has N "steps"/masses | one piece per mass (macro), `Model.cube` with silhouette `faces` |
 | overall proportion (width/height) | pick the scale: height ≈ 16u is the Blockbench/Minecraft default |
@@ -41,7 +41,7 @@ Practical rule: **bevel the pieces on the silhouette** (shoulder, lid, helmet, b
 
 ## 3. Small detail: placement by FACE
 
-Guessing rivet coordinates is where agents stall. Use the face as reference:
+Guessing rivet coordinates is error-prone. Use the face as the reference frame:
 
 ```python
 bbkit.on_face(m, "buckle", "belt", "north", cu=0.5, cv=0.5, du=0.25, dv=0.18, depth=0.12, group=g)
@@ -69,11 +69,11 @@ Mirroring a whole group costs one line and guarantees symmetry (which the human 
 | lots of micro-detail | 3 | 256×256 |
 | small prop (<8u) | 3 | 128×128 |
 
-Dense detail on a small texture blows up the UV allocator (`ValueError: texture full`) — that's a signal the texture needs to grow, not to cut detail.
+Dense detail on a small texture exhausts the UV allocator (`ValueError: texture full`). Treat that as a signal to grow the texture, not to cut detail.
 
 ## 6. Post-editing (edit what already exists)
 
-Useful when the model came from Blockbench, another agent, or `Model.load()`:
+Useful when the model was authored elsewhere, or loaded via `Model.load()`:
 
 ```python
 bbkit.find(m, "trunk")                       # get the element

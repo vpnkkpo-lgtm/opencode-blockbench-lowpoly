@@ -1,10 +1,35 @@
-import sys, os
-sys.path.insert(0, os.path.expanduser("~/.config/opencode/skills/blockbench-lowpoly/scripts"))
-import json
-from bbmodel import Model
-import bbtex, bbcheck, bbrender, bburl, bbglb, bbkit as kit
+#!/usr/bin/env python3
+"""
+Low-poly sword — reference implementation of the blockbench-lowpoly pipeline.
 
-m = Model("espada", tex_w=128, tex_h=128, density=2)
+The pipeline, in order: groups -> cubes -> uv_regions -> cartoon painting ->
+validation (bbcheck) -> GLB -> previews -> web app link.
+
+This file documents that structure. It is not a base to copy and retexture;
+build new assets from scratch.
+
+    python3 build.py
+
+Outputs (generated in this folder): espada.bbmodel, espada.glb,
+preview_sheet.png, link.txt
+"""
+
+import os
+import sys
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+SCRIPTS = os.path.normpath(os.path.join(HERE, "..", "..", "scripts"))
+sys.path.insert(0, SCRIPTS)
+
+import bbcheck  # noqa: E402
+import bbglb  # noqa: E402
+import bbmodel  # noqa: E402
+import bbrender  # noqa: E402
+import bbtex  # noqa: E402
+import bburl  # noqa: E402
+import bbkit as kit  # noqa: E402
+
+m = bbmodel.Model("espada", tex_w=128, tex_h=128, density=2)
 g = m.group("raiz", origin=(8, 0, 8))
 kit.bevel_box(m, "lamina", (7, 2, 0), (9, 18, 16), bevel=0.3, group=g)
 m.cube("guarda", (4, 2, 6), (12, 4, 10), group=g)
