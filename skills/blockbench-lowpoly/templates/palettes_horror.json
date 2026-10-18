@@ -1,0 +1,58 @@
+{
+  "_doc": "Paletas de TERROR/horror. Roles: outline (sombra dura/úmida), base, light, dark (painel 3 tons), accent (sangue/ferida), glow (olho/bioluminescência, o único emissivo), shadow (sombra projetada/fria), background (fundo de preview). NUNCA preto/branco puros — o 'preto' do terror é molhado (#120d14 e cia). Escolha 1 tom por role por peça; alvo 8-20 cores PINTADAS (o resto do arquivo é opção). Use com bbtex.load_palette(); guia: references/style-horror.md.",
+  "zumbi": {
+    "label": "Zumbi (pele apodrecida + olho doente)",
+    "outline": ["#1e2a1e", "#243224", "#192419"],
+    "base": ["#74885c", "#6d8258", "#7c9062"],
+    "light": ["#93a678", "#8c9f73", "#9aad7e"],
+    "dark": ["#54663f", "#4e603b", "#5a6c43"],
+    "accent": ["#7d2f33", "#742b30", "#863339"],
+    "glow": ["#c2cf4e", "#b8c746", "#ccd956"],
+    "shadow": ["#2c3423", "#272f20", "#313a26"],
+    "background": "#161b14"
+  },
+  "vampiro": {
+    "label": "Vampiro (palidez + veludo rubro)",
+    "outline": ["#2b1420", "#331926", "#24101a"],
+    "base": ["#cdbfc8", "#c7b8c2", "#d2c5cd"],
+    "light": ["#e4d8e0", "#ddd1da", "#e8dde4"],
+    "dark": ["#a2929e", "#9c8c98", "#a898a4"],
+    "accent": ["#6f1f31", "#671c2e", "#772234"],
+    "glow": ["#d43a4a", "#cc3545", "#dc3f4f"],
+    "shadow": ["#3d2431", "#371f2c", "#432935"],
+    "background": "#170c12"
+  },
+  "abissal": {
+    "label": "Abissal (fundo do mar + bioluz)",
+    "outline": ["#0e1b26", "#102030", "#0c1822"],
+    "base": ["#2e5a66", "#2a5460", "#325e6a"],
+    "light": ["#427a88", "#3d7382", "#477f8d"],
+    "dark": ["#1f3f4a", "#1c3a44", "#22434e"],
+    "accent": ["#7fc0b8", "#77b8b0", "#87c8c0"],
+    "glow": ["#58e0c8", "#50d8c0", "#60e8d0"],
+    "shadow": ["#0f222c", "#0d1f28", "#11252f"],
+    "background": "#08131a"
+  },
+  "espectral": {
+    "label": "Espectral (ectoplasma + alma)",
+    "outline": ["#232a44", "#283050", "#1f2540"],
+    "base": ["#b8c8e8", "#b1c1e1", "#bfcdef"],
+    "light": ["#d8e4f8", "#d1ddf1", "#dfebff"],
+    "dark": ["#8496bc", "#7d8fb5", "#8b9dc3"],
+    "accent": ["#7666b8", "#6e5eb0", "#7e6ec0"],
+    "glow": ["#9fe8ff", "#98e1f7", "#a6efff"],
+    "shadow": ["#313a5c", "#2c3556", "#364060"],
+    "background": "#10131f"
+  },
+  "gosma": {
+    "label": "Gosma (limo ácido + núcleo instável)",
+    "outline": ["#1a2e10", "#1f3514", "#16280e"],
+    "base": ["#7fb832", "#78b02e", "#86c036"],
+    "light": ["#a2d84e", "#9bd047", "#a9e055"],
+    "dark": ["#5a8f22", "#54871f", "#609727"],
+    "accent": ["#d4f25a", "#cced52", "#dcf762"],
+    "glow": ["#e8ff8a", "#e0fa82", "#f0ff92"],
+    "shadow": ["#24381a", "#203317", "#28401d"],
+    "background": "#0f1808"
+  }
+}

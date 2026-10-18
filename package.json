@@ -1,0 +1,44 @@
+{
+  "name": "opencode-blockbench-lowpoly",
+  "version": "1.0.0",
+  "description": "🧱 Blockbench LowPoly skill as an OpenCode v2 plugin — procedural cute-cartoon 3D assets from code (.bbmodel + .glb + previews + web-app link). Pure Python, zero deps, zero MCP.",
+  "type": "module",
+  "main": "src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "files": [
+    "src",
+    "skills",
+    "README.md",
+    "LICENSE"
+  ],
+  "keywords": [
+    "opencode",
+    "opencode-plugin",
+    "opencode-skill",
+    "blockbench",
+    "lowpoly",
+    "procedural-3d",
+    "cute-cartoon",
+    "bbmodel",
+    "glb",
+    "python"
+  ],
+  "license": "MIT",
+  "author": "vpnkkpo-lgtm",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vpnkkpo-lgtm/opencode-blockbench-lowpoly.git"
+  },
+  "bugs": {
+    "url": "https://github.com/vpnkkpo-lgtm/opencode-blockbench-lowpoly/issues"
+  },
+  "homepage": "https://github.com/vpnkkpo-lgtm/opencode-blockbench-lowpoly#readme",
+  "peerDependencies": {
+    "@opencode/plugin": ">=0.0.0"
+  },
+  "engines": {
+    "opencode": ">=0.0.0"
+  }
+}
